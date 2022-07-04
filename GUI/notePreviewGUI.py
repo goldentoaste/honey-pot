@@ -38,6 +38,7 @@ class Ui_NotePreview(object):
         self.TimeLabel.setObjectName("TimeLabel")
         self.verticalLayout.addWidget(self.TimeLabel)
         self.textBrowser = QtWidgets.QTextBrowser(NotePreview)
+        self.textBrowser.setReadOnly(False)
         self.textBrowser.setOpenExternalLinks(True)
         self.textBrowser.setObjectName("textBrowser")
         self.verticalLayout.addWidget(self.textBrowser)

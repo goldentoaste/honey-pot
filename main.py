@@ -8,7 +8,7 @@ from PyQt5.QtGui import QGuiApplication, QImage, QTextBlock, QTextCursor, QTextI
 from PyQt5.QtQml import QQmlApplicationEngine
 from qt_material import apply_stylesheet
 from PyQt5.QtCore import Qt
-
+import time
 from GUI.mainGUI import Ui_MainWindow
 from GUI.notePreviewGUI import Ui_NotePreview
 
@@ -23,12 +23,25 @@ class NoteTest(Ui_NotePreview, QWidget):
     
     def __init__(self) -> None:
         super().__init__()
+        
+        t0 = time.time()
         self.setupUi(self)
+        self.textBrowser.setStyleSheet(
+            '''
+            QTextBrowser{
+                border: 0px;
+                background-color: #ffffff;
+            }
+            
+            '''
+        )
         
         with open("test.md", "r", encoding='utf8') as f:
             self.textBrowser.setMarkdown(f.read(),)
-            
+        
+    
         doc = self.textBrowser.document()
+        
         cursor = self.textBrowser.textCursor()
         block = doc.begin()
         
@@ -39,11 +52,11 @@ class NoteTest(Ui_NotePreview, QWidget):
                 frag = bit.fragment()
                 textFormat = frag.charFormat()
 
-                print(textFormat, textFormat.isImageFormat())
+                # print(textFormat, textFormat.isImageFormat())
                 
                 if textFormat.isImageFormat():
                     image = textFormat.toImageFormat()
-                    print(f"Image! {image.name()}, {frag.position() , frag.length()}")
+                    # print(f"Image! {image.name()}, {frag.position() , frag.length()}")
                     
                     
                     cursor.setPosition(frag.position(), QTextCursor.MoveAnchor)
@@ -55,9 +68,10 @@ class NoteTest(Ui_NotePreview, QWidget):
                     # image.setName(r"D:\PythonProject\stickyMarkdown\devineInspiration.png")
                     
                 bit +=1
-            print("block finished, going next block")
+            #print("block finished, going next block")
             block = block.next()
-        block = doc.begin()
+        
+        print("init took",time.time() - t0)
         
 
         with open("out.html", "w", encoding="utf-8") as out:

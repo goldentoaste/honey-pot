@@ -2,7 +2,7 @@
  🍯
 
 
-## Known issues:
+## Known issues/draw backs:
 - Qt has issues with parsing titles with strike throughs, for example
     * `### ~~stuff~~` will be parsed into just:  ~~stuff~~
     * use Html tags instead if this is super important (html has its own issues, read below)
@@ -29,3 +29,5 @@
         #
         <h1><s>title!</s></h1>
         ```
+- nested bullets are all rendered with the solid dot, instead of cycling through circle, square etc like proper markdown would.
+- tables are rendered with the default html table looks, so.... very ugly.

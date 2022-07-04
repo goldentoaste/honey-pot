@@ -100,3 +100,16 @@ Here is a [modernized](https://github.com/tylearymf/SETUNA2) version of SETUNA, 
 - add right click to upload to imgur and copy link, to share images when only text is allowed
 - bugs to fix: (1.recover zoom level after minimalizing)(2.minimalizing on zoomed snapshot respects zoom)(3.prevent right click on initial crop)
 - ~~Suppress keyboard input for last key of hotkey combo, if [possible](https://github.com/moses-palmer/pynput/issues/170).~~
+
+
+| Syntax      | Description | Test Text     |
+| :---        |    :----:   |          ---: |
+| Header      | Title       | Here's this   |
+| Paragraph   | Text        | And more      |
+
+
+```
+
+code block
+sadsadasd
+```
