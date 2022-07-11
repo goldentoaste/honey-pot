@@ -9,7 +9,7 @@ from PyQt5.QtGui import QTextBlock, QTextCursor, QImage
 from imageCache import CacheManager
 
 import time
-updateInterval = 5
+updateInterval = 2
 
 class Note(Ui_Note, QWidget):
     def __init__(self, filePath:str, cacheManager : CacheManager,  markdown:str = None, ) -> None:
@@ -17,7 +17,7 @@ class Note(Ui_Note, QWidget):
         self.setupUi(self)
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.cacheManager = cacheManager
-        if not os.path.isfile():
+        if not os.path.isfile(filePath):
             with open(filePath, 'w', encoding='utf8') as _:
                 # create a empty file
                 markdown = ""
@@ -30,7 +30,7 @@ class Note(Ui_Note, QWidget):
         
         self.preview.setMarkdown(self.markdown)
         self.editor.setText(self.markdown)
-        self.fixImages()
+        self.fixImage()
         
         self.editing = False
         self.updateThread :NoteUpdateThread = None
@@ -87,7 +87,7 @@ class Note(Ui_Note, QWidget):
                             cursor.setPosition(fragment.position(), QTextCursor.MoveAnchor)
                             cursor.setPosition(fragment.position()+fragment.length(), QTextCursor.KeepAnchor)
                             cursor.removeSelectedText()
-                            cursor.insertImage(QImage(imagePath), imagePath)
+                            cursor.insertImage(QImage(cachedWebFile), imagePath)
                 bit +=1
             block = block.next()
             
@@ -118,7 +118,7 @@ if __name__ == "__main__":
     
     with open('test.md', 'r', encoding= 'utf8') as f:
         
-        n = Note(f.read())
+        n = Note( r"D:\PythonProject\stickyMarkdown\test.md", CacheManager(r"D:\PythonProject\stickyMarkdown\testCache", 5), f.read(),)
 
     n.show()
     sys.exit(app.exec_())

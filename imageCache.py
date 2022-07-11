@@ -32,8 +32,10 @@ class CacheManager:
         """
 
         # if url is cached, just return it
-        if str(abs(hash(url))) in self.images:
-            return self.images[hash(url)]
+        try:
+            return self.images[str(abs(hash(url)))]
+        except KeyError:
+            pass
 
         # try to download the link
         if not validators.url(url):
