@@ -1,17 +1,22 @@
 from PyQt5.QtWidgets import QWidget, QApplication
 
 from GUI.noteGUI import Ui_Note
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QThread, pyqtSignal
 
 import os
+from PyQt5.QtGui import QTextBlock, QTextCursor, QImage
 
+from imageCache import CacheManager
+
+import time
+updateInterval = 5
 
 class Note(Ui_Note, QWidget):
-    def __init__(self, filePath:str,  markdown:str = None) -> None:
+    def __init__(self, filePath:str, cacheManager : CacheManager,  markdown:str = None, ) -> None:
         super().__init__()
         self.setupUi(self)
         self.setWindowFlags(Qt.FramelessWindowHint)
-        
+        self.cacheManager = cacheManager
         if not os.path.isfile():
             with open(filePath, 'w', encoding='utf8') as _:
                 # create a empty file
@@ -23,14 +28,85 @@ class Note(Ui_Note, QWidget):
             with open(filePath, 'r', encoding='utf8') as f:
                 self.markdown = f.read()
         
-    
-    
-    def setMarkdown(self):
         self.preview.setMarkdown(self.markdown)
+        self.editor.setText(self.markdown)
+        self.fixImages()
+        
+        self.editing = False
+        self.updateThread :NoteUpdateThread = None
+        self.startEditing()
     
-    def fixImage(self):
-        pass
+    def updatePreview(self):
+        if self.editing:
+            self.preview.setMarkdown(self.editor.toPlainText())
+            self.fixImage()
+            
+    def startEditing(self):
+        
+        if not self.updateThread:
+            self.updateThread = NoteUpdateThread(self)
+        self.updateThread.updateSignal.connect(self.updatePreview)
+        self.updateThread.start()
+        self.editing = True
+        
+    def stopEditing(self):
+        self.updateThread.stop()
+        self.editing = False
+        
+    def close(self) -> bool:
+        if self.updateThread:
+            self.updateThread.stop()
+        return super().close()
 
+    def fixImage(self):
+        '''
+        searched for images found in parsed documents
+        replace web images with cached local images
+        already local images are ignored.
+        '''
+        doc = self.preview.document()
+        cursor = self.preview.textCursor()
+        
+        block = doc.begin()
+        
+        while block.isValid():
+            bit = QTextBlock.iterator = block.begin()
+            
+            while not bit.atEnd():
+                fragment = bit.fragment()
+                textFormat = fragment.charFormat()
+                
+                if textFormat.isImageFormat():
+                    imageFormat = textFormat.toImageFormat()
+                    
+                    imagePath = imageFormat.name()
+                    if not os.path.isfile(imagePath):
+                        cachedWebFile = self.cacheManager.getFile(imagePath)
+                        
+                        if cachedWebFile:
+                            cursor.setPosition(fragment.position(), QTextCursor.MoveAnchor)
+                            cursor.setPosition(fragment.position()+fragment.length(), QTextCursor.KeepAnchor)
+                            cursor.removeSelectedText()
+                            cursor.insertImage(QImage(imagePath), imagePath)
+                bit +=1
+            block = block.next()
+            
+
+class NoteUpdateThread(QThread):
+    updateSignal = pyqtSignal()
+
+    def __init__(self, parent : Note = None) -> None:
+        super().__init__(parent)
+        self.shouldRun = True
+        
+        
+    def stop(self):
+        self.shouldRun =False
+    def run(self) -> None:
+        while self.shouldRun:
+            self.updateSignal.emit()
+            time.sleep(updateInterval)
+        
 
 
 if __name__ == "__main__":

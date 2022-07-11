@@ -14,6 +14,8 @@ class NotePreview(Ui_NotePreview, QWidget):
 
         self.markDown: str = None
         self.filepath = filePath
+        
+        self.update()
 
     def update(self):
         """
