@@ -4,12 +4,12 @@ from GUI.noteGUI import Ui_Note
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 
 import os
-from PyQt5.QtGui import QTextBlock, QTextCursor, QImage
+from PyQt5.QtGui import QTextBlock, QTextCursor, QImage, QFont, QFontDatabase, QFontMetrics
 
 from imageCache import CacheManager
 
 import time
-updateInterval = 2
+updateInterval = 1
 
 class Note(Ui_Note, QWidget):
     def __init__(self, filePath:str, cacheManager : CacheManager,  markdown:str = None, ) -> None:
@@ -33,13 +33,45 @@ class Note(Ui_Note, QWidget):
         self.fixImage()
         
         self.editing = False
+        self.needUpdate = True
+        self.previewScroll = 0
         self.updateThread :NoteUpdateThread = None
+        
+        def needUpdate():
+            self.needUpdate = True
+        self.editor.textChanged.connect(needUpdate)
+        
         self.startEditing()
+        
+        self.setupButtons()
+        self.setupStyles()
+    
+    def setupButtons(self):
+        self.closeButton.clicked.connect(self.close)
+    
+    def setupStyles(self):
+        QFontDatabase.addApplicationFont(r'GUI/Raleway-Light.ttf')
+        font = QFont()
+        font.setFamily('Raleway')
+        print(QFont.Weight.Black)
+        font.setWeight(35)
+        font.setPointSize(11)
+        self.previewFont = font
+        self.preview.setFont(self.previewFont)
+        
+        self.editorFont = QFont("Cascadia Code", 9, QFont.Weight.Light)
+        self.editor.setFont(self.editorFont)
+        
+        metric = QFontMetrics(self.editorFont)
+        self.editor.setTabStopDistance(metric.width(" ") * 4)
     
     def updatePreview(self):
-        if self.editing:
+        if self.editing and self.needUpdate:
+            self.previewScroll = self.preview.verticalScrollBar().value()
             self.preview.setMarkdown(self.editor.toPlainText())
             self.fixImage()
+            self.needUpdate = False
+            self.preview.verticalScrollBar().setValue(self.previewScroll)
             
     def startEditing(self):
         
@@ -114,7 +146,7 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
     from qt_material import apply_stylesheet
-    apply_stylesheet(app, theme='GUI/colors.xml')
+    # apply_stylesheet(app, theme='GUI/colors.xml')
     
     with open('test.md', 'r', encoding= 'utf8') as f:
         
