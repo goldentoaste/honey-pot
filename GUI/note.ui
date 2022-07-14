@@ -83,12 +83,13 @@
             <height>35</height>
            </size>
           </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton:hover:!pressed{
+	border: 1px solid #000000;
+}</string>
+          </property>
           <property name="text">
            <string/>
-          </property>
-          <property name="icon">
-           <iconset>
-            <normaloff>add.svg</normaloff>add.svg</iconset>
           </property>
           <property name="iconSize">
            <size>
@@ -109,12 +110,34 @@
             <height>35</height>
            </size>
           </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton:hover:!pressed{
+	border: 1px solid #000000;
+}</string>
+          </property>
           <property name="text">
            <string/>
           </property>
-          <property name="icon">
-           <iconset>
-            <normaloff>pin.svg</normaloff>pin.svg</iconset>
+          <property name="iconSize">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="flat">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="editButton">
+          <property name="styleSheet">
+           <string notr="true">QPushButton:hover:!pressed{
+	border: 1px solid #000000;
+}</string>
+          </property>
+          <property name="text">
+           <string/>
           </property>
           <property name="iconSize">
            <size>
@@ -148,18 +171,22 @@
             <height>35</height>
            </size>
           </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton:hover:!pressed{
+	border: 1px solid #000000;
+}</string>
+          </property>
           <property name="text">
            <string/>
-          </property>
-          <property name="icon">
-           <iconset>
-            <normaloff>minimize.svg</normaloff>minimize.svg</iconset>
           </property>
           <property name="iconSize">
            <size>
             <width>20</width>
             <height>20</height>
            </size>
+          </property>
+          <property name="checkable">
+           <bool>false</bool>
           </property>
           <property name="flat">
            <bool>true</bool>
@@ -174,12 +201,13 @@
             <height>35</height>
            </size>
           </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton:hover:!pressed{
+	border: 1px solid #000000;
+}</string>
+          </property>
           <property name="text">
            <string/>
-          </property>
-          <property name="icon">
-           <iconset>
-            <normaloff>close.svg</normaloff>close.svg</iconset>
           </property>
           <property name="iconSize">
            <size>
