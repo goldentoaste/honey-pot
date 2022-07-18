@@ -9,3 +9,21 @@ def getResource( relative_path):
     except AttributeError:
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
+
+
+
+
+class A:
+    
+    def stuff(self):
+        print("AAA")
+
+
+def change(a:A):
+    a.stuff = lambda : print("BBB")
+
+    
+
+x = A()
+change(x)
+x.stuff()
