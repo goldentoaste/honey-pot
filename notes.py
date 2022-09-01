@@ -12,6 +12,8 @@ from PyQt5.QtWidgets import QApplication, QFrame, QWidget
 from GUI.noteGUI import Ui_Note
 from imageCache import CacheManager
 from utils import getResource
+import ctypes
+user32 = ctypes.windll.user32
 
 updateInterval = 1
 dragMargin = 8
@@ -31,6 +33,12 @@ class ScaleableWindowFrame(QWidget):
         self.setMouseTracking(True)
         self.prevDir = (None, None)
         self.lastPos : QPoint= None
+        
+        user32.SetWindowLongPtrA(
+            int(self.winId()),
+            -16,
+            0x00840000,
+        )
 
     directionCursor: Dict[Tuple[int, int], Qt.CursorShape] = {
         (top, left): c.SizeFDiagCursor,
@@ -118,12 +126,13 @@ class Note(Ui_Note, ScaleableWindowFrame):
     def __init__(self, filePath: str, cacheManager: CacheManager, markdown: str = None,) -> None:
         super().__init__()
         self.setupUi(self)
-        self.setWindowFlags(Qt.FramelessWindowHint)
+        #self.setWindowFlags(Qt.FramelessWindowHint)
         self.cacheManager = cacheManager
         if not os.path.isfile(filePath):
             with open(filePath, "w", encoding="utf8") as _:
                 # create a empty file
                 markdown = ""
+        self.newNoteButton.setWhatsThis("WOWOWOWOWOW")
 
         if markdown:
             self.markdown = markdown
@@ -299,6 +308,7 @@ if __name__ == "__main__":
     import sys
 
     app = QApplication(sys.argv)
+    
     from qt_material import apply_stylesheet
 
     # apply_stylesheet(app, theme='GUI/colors.xml')
