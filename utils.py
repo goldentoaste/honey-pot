@@ -13,17 +13,3 @@ def getResource( relative_path):
 
 
 
-class A:
-    
-    def stuff(self):
-        print("AAA")
-
-
-def change(a:A):
-    a.stuff = lambda : print("BBB")
-
-    
-
-x = A()
-change(x)
-x.stuff()

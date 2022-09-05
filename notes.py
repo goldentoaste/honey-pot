@@ -1,7 +1,7 @@
-from email.charset import QP
+
 import os
 import time
-from re import L
+
 from typing import Dict, Tuple
 
 from PyQt5.QtCore import QPoint, QPointF, Qt, QThread, pyqtSignal, QRect, QMargins
@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import QApplication, QFrame, QWidget
 from GUI.noteGUI import Ui_Note
 from imageCache import CacheManager
 from utils import getResource
+from threading import Thread
 import ctypes
 user32 = ctypes.windll.user32
 
@@ -34,11 +35,12 @@ class ScaleableWindowFrame(QWidget):
         self.prevDir = (None, None)
         self.lastPos : QPoint= None
         
-        user32.SetWindowLongPtrA(
-            int(self.winId()),
-            -16,
-            0x00840000,
-        )
+        # user32.SetWindowLongPtrA(
+        #     int(self.winId()),
+        #     -16,
+        #     0x00840000,
+        # )
+        self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
 
     directionCursor: Dict[Tuple[int, int], Qt.CursorShape] = {
         (top, left): c.SizeFDiagCursor,
@@ -113,26 +115,50 @@ class ScaleableWindowFrame(QWidget):
         a0.accept()
 
 
-def ignoreHover(ob: QWidget) -> QWidget:
+def ignoreEdgeDrag(target:QWidget, parent:QWidget, borderSize:int):
     
+    oldPressEvent = target.mousePressEvent
+    oldMoveEvent = target.mouseMoveEvent
+    
+    def makeReplacementEvent(isPress = True):
+        # false for press event
+        def replacementEvent(event:QMouseEvent):
+            
+            mX = event.globalX()
+            mY = event.globalY()
+            
+            pX0 = parent.x()
+            pY0 = parent.y()
+            pX1 = pX0 + parent.width()
+            pY1 = pY0 + parent.height()
+            
+            # within margin
+            if any((mX - pX0 <= borderSize, mY - pY0 <= borderSize, pX1 - mX < borderSize, pY1 - mY < borderSize)):
+                event.ignore()
+            else:
+                oldPressEvent(event) if isPress else oldMoveEvent(event)    
+                
+        return replacementEvent
+    
+    target.mousePressEvent = makeReplacementEvent(isPress=True)
+    target.mouseMoveEvent = makeReplacementEvent(isPress=False)    
+    
+def ignoreHover(ob: QWidget) -> QWidget:
     ob.setMouseTracking(True)
     evt = ob.mouseMoveEvent
     # ob.mouseMoveEvent = lambda a0: a0.ignore()
     ob.mouseMoveEvent = lambda a0: (a0.ignore() if a0.buttons() == Qt.MouseButton.NoButton else evt(a0))
-    print(ob, ob.mouseMoveEvent, evt)
-
 
 class Note(Ui_Note, ScaleableWindowFrame):
     def __init__(self, filePath: str, cacheManager: CacheManager, markdown: str = None,) -> None:
         super().__init__()
         self.setupUi(self)
-        #self.setWindowFlags(Qt.FramelessWindowHint)
         self.cacheManager = cacheManager
+        self.filePath = filePath
         if not os.path.isfile(filePath):
             with open(filePath, "w", encoding="utf8") as _:
                 # create a empty file
                 markdown = ""
-        self.newNoteButton.setWhatsThis("WOWOWOWOWOW")
 
         if markdown:
             self.markdown = markdown
@@ -146,6 +172,8 @@ class Note(Ui_Note, ScaleableWindowFrame):
 
         self.editing = False
         self.needUpdate = True
+        self.pinned = False
+        self.savingDone = True # used as a lock for the async saving function
         self.previewScroll = 0
         self.updateThread: NoteUpdateThread = None
         self.startEditing()
@@ -160,14 +188,22 @@ class Note(Ui_Note, ScaleableWindowFrame):
         self.minimizeButton.clicked.connect(lambda: self.setWindowState(Qt.WindowState.WindowMinimized))
 
         makeFrameDraggable(self.frame)
-        ignoreHover(self.frame)
-        ignoreHover(self.pinButton)
-        ignoreHover(self.newNoteButton)
-        ignoreHover(self.editButton)
-        ignoreHover(self.minimizeButton)
-        ignoreHover(self.closeButton)
+        # ignoreHover(self.frame)
+        # ignoreHover(self.pinButton)
+        # ignoreHover(self.newNoteButton)
+        # ignoreHover(self.editButton)
+        # ignoreHover(self.minimizeButton)
+        # ignoreHover(self.closeButton)
+        
+        ignoreEdgeDrag(self.frame, self, dragMargin)
+        ignoreEdgeDrag(self.pinButton, self, dragMargin)
+        ignoreEdgeDrag(self.newNoteButton, self, dragMargin)
+        ignoreEdgeDrag(self.editButton, self, dragMargin)
+        ignoreEdgeDrag(self.minimizeButton, self, dragMargin)
+        ignoreEdgeDrag(self.closeButton, self, dragMargin)
         #x = (ignoreHover(item) for item in (self.pinButton, self.newNoteButton, self.editButton, self.minimizeButton, self.closeButton, self.frame))
-  
+        
+        
     def setupStyles(self):
         # fonts stuff
         QFontDatabase.addApplicationFont(r"GUI/Raleway-Light.ttf")
@@ -195,15 +231,59 @@ class Note(Ui_Note, ScaleableWindowFrame):
         self.minimizeButton.setIcon(QIcon(QPixmap(getResource("GUI\\minimize.svg"))))
         self.closeButton.setIcon(QIcon(QPixmap(getResource("GUI\\close.svg"))))
 
+        self.pinButton.clicked.connect(self.togglePin)
+        self.editButton.clicked.connect(self.toggleEdit)
+        
+    def toggleEdit(self):
+        if self.editing:
+            self.stopEditing()
+            self.editor.hide()
+            self.editLabel.hide()
+            self.previewLabel.hide()
+        else:
+            self.startEditing()
+            self.editor.show()
+            self.editLabel.show()
+            self.previewLabel.show()
+        
+    def saveContent(self):
+        '''
+        saves the markdown content to disk
+        this shouldnt be called too often since it must rewrite the entire file
+        '''
+        def save():
+            self.savingDone=False
+            with open(self.filePath, 'w', encoding='utf-8') as f:
+                f.write(self.markdown)
+            self.savingDone = True
+            
+        if not self.savingDone:
+            return
+        self.savingThread = Thread(target = save)
+        self.savingThread.start()
+        
+        
+    def togglePin(self):
+        if self.pinned:
+            self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, False)
+            self.pinButton.setIcon(self.pinned)
+        else:
+            self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
+            self.pinButton.setIcon(self.filledPinIcon)
+        self.pinned = not self.pinned
+        self.show()
+            
     def updatePreview(self):
-
         if self.editing and self.needUpdate:
             self.previewScroll = self.preview.verticalScrollBar().value()
-            self.preview.setMarkdown(self.editor.toPlainText())
+            self.markdown = self.editor.toPlainText()
+            self.preview.setMarkdown(self.markdown)
             self.fixImage()
             self.needUpdate = False
             self.preview.verticalScrollBar().setValue(self.previewScroll)
-
+            
+            self.saveContent()
+            
     def startEditing(self):
 
         if not self.updateThread:
@@ -214,15 +294,14 @@ class Note(Ui_Note, ScaleableWindowFrame):
 
     def stopEditing(self):
         self.updateThread.stop()
-
         self.editing = False
 
-    def close(self) -> bool:
+    def closeEvent(self, evt) -> bool:
+        self.saveContent()
         if self.updateThread:
             self.updateThread.stop()
             self.updateThread.terminate()
-
-        return super().close()
+        
 
     def fixImage(self):
 
@@ -259,16 +338,12 @@ class Note(Ui_Note, ScaleableWindowFrame):
             block = block.next()
 
 
-
-
-
 def makeFrameDraggable( frame:QFrame):
     
     frame.setMouseTracking(True)
     frame.offset = None
     def mousePressEvent( a0: QMouseEvent):
         frame.offset = a0.screenPos() - frame.mapToGlobal(frame.pos())
-
 
     def mouseMoveEvent( a0: QMouseEvent):
  
@@ -291,7 +366,6 @@ class NoteUpdateThread(QThread):
     updateSignal = pyqtSignal()
 
     def __init__(self, parent: Note = None) -> None:
-        print("parent", parent)
         super().__init__(parent)
         self.shouldRun = True
 
@@ -309,7 +383,7 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
     
-    from qt_material import apply_stylesheet
+    # from qt_material import apply_stylesheet
 
     # apply_stylesheet(app, theme='GUI/colors.xml')
 
