@@ -107,7 +107,7 @@ class Ui_Note(object):
         self.editLabel = QtWidgets.QLabel(Note)
         self.editLabel.setObjectName("editLabel")
         self.verticalLayout_3.addWidget(self.editLabel)
-        self.editor = QtWidgets.QTextEdit(Note)
+        self.editor = MarkdownEditor(Note)
         self.editor.setStyleSheet("QTextEdit, QTextBrowser{\n"
 "\n"
 "border:1px solid #000000;\n"
@@ -140,6 +140,7 @@ class Ui_Note(object):
         Note.setWindowTitle(_translate("Note", "Form"))
         self.editLabel.setText(_translate("Note", "Edit Markdown"))
         self.previewLabel.setText(_translate("Note", "Preview"))
+from markdownEditor import MarkdownEditor
 
 
 if __name__ == "__main__":

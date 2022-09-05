@@ -258,7 +258,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QTextEdit" name="editor">
+        <widget class="MarkdownEditor" name="editor">
          <property name="styleSheet">
           <string notr="true">QTextEdit, QTextBrowser{
 
@@ -309,6 +309,13 @@ border:1px solid #000000;
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>MarkdownEditor</class>
+   <extends>QTextEdit</extends>
+   <header>markdownEditor</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

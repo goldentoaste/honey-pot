@@ -14,7 +14,6 @@ class NotePreview(Ui_NotePreview, QWidget):
 
         self.markDown: str = None
         self.filepath = filePath
-        
         self.update()
 
     def update(self):
@@ -25,13 +24,17 @@ class NotePreview(Ui_NotePreview, QWidget):
 
             self.markDown = f.read()
 
-            self.textBrowser.setMarkdown("\n".join(self.markDown.split(os.linesep, 3)))  # preview the first 3 lines
+            self.textBrowser.setMarkdown(
+                "\n".join(self.markDown.split(os.linesep, 3))
+            )  # preview the first 3 lines
 
         # time stuff
         unixTime = os.path.getmtime(self.filepath)
         dt = datetime.datetime.utcfromtimestamp(unixTime)
         if dt.year == datetime.datetime.now().year:
-            timeStr = dt.strftime("%b %d, %a")  # Jun 17, Weds etc, hiding year number if is from the current year.
+            timeStr = dt.strftime(
+                "%b %d, %a"
+            )  # Jun 17, Weds etc, hiding year number if is from the current year.
         else:
             timeStr = dt.strftime("%b %d, %Y")
         self.timeLabel.setText(timeStr)
