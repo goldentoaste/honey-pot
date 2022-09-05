@@ -252,6 +252,12 @@
        </property>
        <item>
         <widget class="QLabel" name="editLabel">
+         <property name="font">
+          <font>
+           <family>Cascadia Mono</family>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
          <property name="text">
           <string>Edit Markdown</string>
          </property>
@@ -285,6 +291,12 @@ border:1px solid #000000;
        </property>
        <item>
         <widget class="QLabel" name="previewLabel">
+         <property name="font">
+          <font>
+           <family>Cascadia Mono</family>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
          <property name="text">
           <string>Preview</string>
          </property>

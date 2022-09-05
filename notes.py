@@ -1,7 +1,7 @@
 import os
 import time
 
-from typing import Dict, Tuple
+from typing import Dict, Literal, Tuple
 
 from PyQt5.QtCore import QPoint, Qt, QThread, pyqtSignal, QRect, QMargins
 from PyQt5.QtGui import (
@@ -155,10 +155,21 @@ def ignoreEdgeDrag(target: QWidget, parent: QWidget, borderSize: int):
 
     oldPressEvent = target.mousePressEvent
     oldMoveEvent = target.mouseMoveEvent
+    oldReleaseEvent = target.mouseReleaseEvent
+    target.ignoring = False
 
-    def makeReplacementEvent(isPress=True):
+    def makeReplacementEvent(eventType: Literal["press", "move", "release"]):
         # false for press event
         def replacementEvent(event: QMouseEvent):
+            # FIXME maybe split this to 3 functions instead
+            if eventType == "release":
+                if target.ignoring:
+                    target.ignoring = False
+                    event.ignore()
+                    return
+            if target.ignoring:
+                event.ignore()
+                return
 
             mX = event.globalX()
             mY = event.globalY()
@@ -173,13 +184,22 @@ def ignoreEdgeDrag(target: QWidget, parent: QWidget, borderSize: int):
                 (mX - pX0 <= borderSize, mY - pY0 <= borderSize, pX1 - mX < borderSize, pY1 - mY < borderSize)
             ):
                 event.ignore()
+                if eventType == "press":
+                    target.ignoring = True
+                return
+
+            if eventType == "press":
+                return oldPressEvent(event)
+            elif eventType == "move":
+                return oldMoveEvent(event)
             else:
-                oldPressEvent(event) if isPress else oldMoveEvent(event)
+                return oldReleaseEvent(event)
 
         return replacementEvent
 
-    target.mousePressEvent = makeReplacementEvent(isPress=True)
-    target.mouseMoveEvent = makeReplacementEvent(isPress=False)
+    target.mousePressEvent = makeReplacementEvent(eventType="press")
+    target.mouseMoveEvent = makeReplacementEvent(eventType="move")
+    target.mouseReleaseEvent = makeReplacementEvent(eventType="release")
 
 
 def ignoreHover(ob: QWidget) -> QWidget:
@@ -310,7 +330,7 @@ class Note(Ui_Note, ScaleableWindowFrame):
     def togglePin(self):
         if self.pinned:
             self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, False)
-            self.pinButton.setIcon(self.pinned)
+            self.pinButton.setIcon(self.pinIcon)
         else:
             self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
             self.pinButton.setIcon(self.filledPinIcon)
