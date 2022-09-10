@@ -84,3 +84,4 @@ class MarkdownEditor(QTextEdit):
                     print(f"url is not a local file uri: {url}")
 
         return super().insertFromMimeData(source)
+

@@ -1,9 +1,9 @@
 import os
-import time
+from time import time, sleep
 
 from typing import Dict, Literal, Tuple
 
-from PyQt5.QtCore import QPoint, Qt, QThread, pyqtSignal, QRect, QMargins
+from PyQt5.QtCore import QPoint, Qt, QThread, pyqtSignal, QRect, QMargins, QUrl
 from PyQt5.QtGui import (
     QFont,
     QFontDatabase,
@@ -14,6 +14,7 @@ from PyQt5.QtGui import (
     QPixmap,
     QTextBlock,
     QTextCursor,
+
 )
 from PyQt5.QtWidgets import QApplication, QFrame, QWidget
 
@@ -26,8 +27,8 @@ import ctypes
 user32 = ctypes.windll.user32
 
 updateInterval = 1
-dragMargin = 10
-
+ignoreMargin = 12
+dragMargin = 8
 
 top = 0
 bot = 1
@@ -128,7 +129,6 @@ class ScaleableWindowFrame(QWidget):
         a0.accept()
 
     def handleHover(self, a0: QMouseEvent):
-        print(a0)
         # first determine which edge the mouse cursor is on
         p = a0.pos()
         # vertical direction
@@ -138,9 +138,8 @@ class ScaleableWindowFrame(QWidget):
             v = bot
         else:
             v = None
-
         # horizontal direction
-        if p.x() < dragMargin:
+        if p.x() <= dragMargin:
             h = left
         elif self.width() - p.x() < dragMargin:
             h = right
@@ -237,9 +236,9 @@ class Note(Ui_Note, ScaleableWindowFrame):
                 self.markdown = f.read()
 
         self.preview.setMarkdown(self.markdown)
-        self.editor.setText(self.markdown)
+        self.editor.setPlainText(self.markdown)
         self.fixImage()
-
+        print(self.markdown)
         self.editing = False
         self.needUpdate = True
         self.pinned = False
@@ -256,16 +255,13 @@ class Note(Ui_Note, ScaleableWindowFrame):
         self.editor.textChanged.connect(lambda: setattr(self, "needUpdate", True))
         self.closeButton.clicked.connect(self.close)
         self.minimizeButton.clicked.connect(lambda: self.setWindowState(Qt.WindowState.WindowMinimized))
-
         makeFrameDraggable(self.frame)
-
-
-        ignoreEdgeDrag(self.frame, self, dragMargin)
-        ignoreEdgeDrag(self.pinButton, self, dragMargin)
-        ignoreEdgeDrag(self.newNoteButton, self, dragMargin)
-        ignoreEdgeDrag(self.editButton, self, dragMargin)
-        ignoreEdgeDrag(self.minimizeButton, self, dragMargin)
-        ignoreEdgeDrag(self.closeButton, self, dragMargin)
+        ignoreEdgeDrag(self.frame, self, ignoreMargin)
+        ignoreEdgeDrag(self.pinButton, self, ignoreMargin)
+        ignoreEdgeDrag(self.newNoteButton, self, ignoreMargin)
+        ignoreEdgeDrag(self.editButton, self, ignoreMargin)
+        ignoreEdgeDrag(self.minimizeButton, self, ignoreMargin)
+        ignoreEdgeDrag(self.closeButton, self, ignoreMargin)
         # x = (ignoreHover(item) for item in (self.pinButton, self.newNoteButton, self.editButton, self.minimizeButton, self.closeButton, self.frame))
 
     def setupStyles(self):
@@ -339,14 +335,18 @@ class Note(Ui_Note, ScaleableWindowFrame):
 
     def updatePreview(self):
         if self.editing and self.needUpdate:
+            t0 = time()
             self.previewScroll = self.preview.verticalScrollBar().value()
             self.markdown = self.editor.toPlainText()
             self.preview.setMarkdown(self.markdown)
+            # self.preview.setMarkdown(self.markdown)
+            
             self.fixImage()
             self.needUpdate = False
             self.preview.verticalScrollBar().setValue(self.previewScroll)
-
             self.saveContent()
+            print(f"update took {time()-t0}")
+            print(self.preview.toHtml())
 
     def startEditing(self):
 
@@ -390,8 +390,10 @@ class Note(Ui_Note, ScaleableWindowFrame):
                     imagePath = imageFormat.name()
                     if not os.path.isfile(imagePath):
                         cachedWebFile = self.cacheManager.getFile(imagePath)
-
+                        
                         if cachedWebFile:
+                            # self.preview.loadResource(2, QUrl(cachedWebFile))
+                            # self.preview.viewport().update()
                             cursor.setPosition(fragment.position(), QTextCursor.MoveAnchor)
                             cursor.setPosition(
                                 fragment.position() + fragment.length(), QTextCursor.KeepAnchor
@@ -440,7 +442,7 @@ class NoteUpdateThread(QThread):
     def run(self) -> None:
         while self.shouldRun:
             self.updateSignal.emit()
-            time.sleep(updateInterval)
+            sleep(updateInterval)
 
 
 if __name__ == "__main__":
