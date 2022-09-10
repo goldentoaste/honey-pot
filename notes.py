@@ -26,7 +26,7 @@ import ctypes
 user32 = ctypes.windll.user32
 
 updateInterval = 1
-dragMargin = 8
+dragMargin = 10
 
 
 top = 0
@@ -78,6 +78,8 @@ class ScaleableWindowFrame(QWidget):
         a0.accept()
 
     def handleDrag(self, a0: QMouseEvent):
+        if not self.lastPos:
+            return
         diff = a0.globalPos() - self.lastPos
 
         dx = diff.x()
@@ -126,6 +128,7 @@ class ScaleableWindowFrame(QWidget):
         a0.accept()
 
     def handleHover(self, a0: QMouseEvent):
+        print(a0)
         # first determine which edge the mouse cursor is on
         p = a0.pos()
         # vertical direction
@@ -157,6 +160,8 @@ def ignoreEdgeDrag(target: QWidget, parent: QWidget, borderSize: int):
     oldMoveEvent = target.mouseMoveEvent
     oldReleaseEvent = target.mouseReleaseEvent
     target.ignoring = False
+    
+    target.setMouseTracking(True)
 
     def makeReplacementEvent(eventType: Literal["press", "move", "release"]):
         # false for press event
@@ -253,12 +258,7 @@ class Note(Ui_Note, ScaleableWindowFrame):
         self.minimizeButton.clicked.connect(lambda: self.setWindowState(Qt.WindowState.WindowMinimized))
 
         makeFrameDraggable(self.frame)
-        # ignoreHover(self.frame)
-        # ignoreHover(self.pinButton)
-        # ignoreHover(self.newNoteButton)
-        # ignoreHover(self.editButton)
-        # ignoreHover(self.minimizeButton)
-        # ignoreHover(self.closeButton)
+
 
         ignoreEdgeDrag(self.frame, self, dragMargin)
         ignoreEdgeDrag(self.pinButton, self, dragMargin)
@@ -411,7 +411,6 @@ def makeFrameDraggable(frame: QFrame):
         frame.offset = a0.screenPos() - frame.mapToGlobal(frame.pos())
 
     def mouseMoveEvent(a0: QMouseEvent):
-
         if frame.offset:
             frame.parent().move((a0.screenPos() - frame.offset).toPoint())
 
