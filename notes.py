@@ -238,7 +238,7 @@ class Note(Ui_Note, ScaleableWindowFrame):
         self.preview.setMarkdown(self.markdown)
         self.editor.setPlainText(self.markdown)
         self.fixImage()
-        print(self.markdown)
+
         self.editing = False
         self.needUpdate = True
         self.pinned = False
@@ -346,7 +346,6 @@ class Note(Ui_Note, ScaleableWindowFrame):
             self.preview.verticalScrollBar().setValue(self.previewScroll)
             self.saveContent()
             print(f"update took {time()-t0}")
-            print(self.preview.toHtml())
 
     def startEditing(self):
 
@@ -383,23 +382,25 @@ class Note(Ui_Note, ScaleableWindowFrame):
             while not bit.atEnd():
                 fragment = bit.fragment()
                 textFormat = fragment.charFormat()
-
+  
                 if textFormat.isImageFormat():
                     imageFormat = textFormat.toImageFormat()
 
                     imagePath = imageFormat.name()
                     if not os.path.isfile(imagePath):
                         cachedWebFile = self.cacheManager.getFile(imagePath)
-                        
                         if cachedWebFile:
+                            self.preview.document().addResource(2, QUrl(imagePath), QImage(r"D:\PythonProject\stickyMarkdown\testCache\2e53f07491fb7dc99e3aa8d9c9b4c8a9.png"))
+                            print(self.preview.document().resource(2, QUrl(imagePath),))
+                            print(self.preview.document().resource(2, QUrl("stufgf"),))
                             # self.preview.loadResource(2, QUrl(cachedWebFile))
                             # self.preview.viewport().update()
-                            cursor.setPosition(fragment.position(), QTextCursor.MoveAnchor)
-                            cursor.setPosition(
-                                fragment.position() + fragment.length(), QTextCursor.KeepAnchor
-                            )
-                            cursor.removeSelectedText()
-                            cursor.insertImage(QImage(cachedWebFile), imagePath)
+                            # cursor.setPosition(fragment.position(), QTextCursor.MoveAnchor)
+                            # cursor.setPosition(
+                            #     fragment.position() + fragment.length(), QTextCursor.KeepAnchor
+                            # )
+                            # cursor.removeSelectedText()
+                            # cursor.insertImage(QImage(cachedWebFile), imagePath)
                 bit += 1
             block = block.next()
 
