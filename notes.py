@@ -237,7 +237,7 @@ class Note(Ui_Note, ScaleableWindowFrame):
 
         self.preview.setMarkdown(self.markdown)
         self.editor.setPlainText(self.markdown)
-        self.fixImage()
+        # self.fixImage()
 
         self.editing = False
         self.needUpdate = True
@@ -262,6 +262,9 @@ class Note(Ui_Note, ScaleableWindowFrame):
         ignoreEdgeDrag(self.editButton, self, ignoreMargin)
         ignoreEdgeDrag(self.minimizeButton, self, ignoreMargin)
         ignoreEdgeDrag(self.closeButton, self, ignoreMargin)
+        ignoreEdgeDrag(self.editLabel, self,ignoreMargin)
+        ignoreEdgeDrag(self.previewLabel, self, ignoreMargin)
+        
         # x = (ignoreHover(item) for item in (self.pinButton, self.newNoteButton, self.editButton, self.minimizeButton, self.closeButton, self.frame))
 
     def setupStyles(self):
@@ -341,7 +344,7 @@ class Note(Ui_Note, ScaleableWindowFrame):
             self.preview.setMarkdown(self.markdown)
             # self.preview.setMarkdown(self.markdown)
             
-            self.fixImage()
+            # self.fixImage()
             self.needUpdate = False
             self.preview.verticalScrollBar().setValue(self.previewScroll)
             self.saveContent()

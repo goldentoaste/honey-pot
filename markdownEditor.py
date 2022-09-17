@@ -1,18 +1,20 @@
 import os
 from time import time
 from typing import List
-from PyQt5.QtWidgets import QTextEdit
+from PyQt5.QtWidgets import QTextEdit, QTextBrowser
 from PyQt5.QtCore import QMimeData, pyqtSignal, QUrl
 from PyQt5.QtGui import QImage
-from utils import cacheLocation
+from utils import cacheLocation, mdImageRegex
 from random import randint
 from hashlib import md5
 from urllib.parse import urlparse
 from os import path
+from imageCache import CacheManager
 
 copyCommand = "copy" if os.name == "nt" else "cp"  # copy for windows, cp for unix systems
 backSlash = "\\"
 
+imageLocations = CacheManager(r"D:\PythonProject\stickyMarkdown\testCache", 5)
 
 def cleanSlash(d: str):
     """
@@ -21,11 +23,37 @@ def cleanSlash(d: str):
     return d.replace("\\", os.sep).replace("/", os.sep)
 
 
+class MarkdownPreview(QTextBrowser):
+    
+    fileAddedSignal = pyqtSignal(str)
+    
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.cache = CacheManager(r"D:\PythonProject\stickyMarkdown\testCache", 5)
+        
+        
+    def setMarkdown(self, markdown: str) -> None:
+        
+        t0 = time()
+        imageLinks = mdImageRegex.findall(markdown)
+        print(f"searching for image links took: {time() - t0}")
+        
+        t1 = time()
+        for link in imageLinks:
+            print(f"trying to loading image: {link}")
+            
+            cachedFile = self.cache.getFile(link)
+            if cachedFile:
+                self.document().addResource(2, QUrl(link), QImage(cachedFile))
+        print(f"loading images took : {time() - t1}")
+        return super().setMarkdown(markdown)
+    
+    
+    
 class MarkdownEditor(QTextEdit):
     """
     class used to inject markdown behaviour into a QTextEdit
     """
-
     fileAddedSignal = pyqtSignal(str)
 
     def __init__(self, *args, **kwargs) -> None:
@@ -37,6 +65,7 @@ class MarkdownEditor(QTextEdit):
 
     def createMimeDataFromSelection(self) -> QMimeData:
         return super().createMimeDataFromSelection()
+    
 
     def insertFromMimeData(self, source: QMimeData) -> None:
         print(source.formats())

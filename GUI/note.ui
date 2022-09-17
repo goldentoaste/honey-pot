@@ -303,7 +303,7 @@ border:1px solid #000000;
         </widget>
        </item>
        <item>
-        <widget class="QTextBrowser" name="preview">
+        <widget class="MarkdownPreview" name="preview">
          <property name="styleSheet">
           <string notr="true">QTextEdit{
 
@@ -325,6 +325,11 @@ border:1px solid #000000;
   <customwidget>
    <class>MarkdownEditor</class>
    <extends>QTextEdit</extends>
+   <header>markdownEditor</header>
+  </customwidget>
+  <customwidget>
+   <class>MarkdownPreview</class>
+   <extends>QTextBrowser</extends>
    <header>markdownEditor</header>
   </customwidget>
  </customwidgets>
