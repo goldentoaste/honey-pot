@@ -1,12 +1,14 @@
 import os
 from glob import glob
-from typing import Dict
+from time import time
+from typing import Dict, Tuple
 
 import requests
 from validators import url as isUrl
 
 from requests.exceptions import RequestException
 from hashlib import md5
+from PyQt5.QtGui import QImage, QPixmap
 
 imageExt = {"image/bmp": ".bmp", "image/jpeg": ".jpg", "image/png": ".png"}
 
@@ -28,7 +30,8 @@ class CacheManager:
         ):
             self.images[os.path.splitext(file)[0]] = file
 
-    def getFile(self, url: str, noDeleteFlag: bool = False) -> str:
+    def getFile(self, url: str, noDeleteFlag: bool = False) ->Tuple[str, QImage]:
+        # TODO replace loading image from local to save cache in memory for each page, clear the cache for a page when its closed
         """
         takes a web image link and returns a file path, cached
         """
@@ -36,7 +39,7 @@ class CacheManager:
         
         # if url is cached, just return it
         try:
-            return self.images[urlHash]
+            return self.images[urlHash], QImage(self.images[urlHash])
         except KeyError:
             pass
 
@@ -51,6 +54,7 @@ class CacheManager:
             print("Web request failed")
             return None
 
+        print(result.headers)
         try:
             mimeType = result.headers["Content-Type"]
             print(f"Content-Type: {mimeType}")
@@ -58,13 +62,14 @@ class CacheManager:
             filePath = os.path.join(self.folder, f"{'nodelete' if noDeleteFlag else''}{urlHash}{ext}")
             with open(filePath, "wb") as out:
                 out.write(result.content)
+            
             self.images[urlHash] = filePath
-            # self.removeExtra()
-            return filePath
+
+            return filePath, QImage.fromData(result.content)
         except KeyError:
             print("link is not an image or content type is not found")
             print(url)
-            return None
+            return None, None
 
     def removeExtra(self):
         """

@@ -8,6 +8,8 @@ cacheLocation = r"D:\PythonProject\stickyMarkdown\testCache"
 
 mdImageRegex = re.compile(r"\!\[[^\[\]]+\]\(([^\(\)]+)\)") # finds all the image links
 
+mdCodeBlockRegex = re.compile(r"```([\s\S]*?)```")
+
 def getResource(relative_path):
     """Get absolute path to resource, works for dev and for PyInstaller"""
     try:

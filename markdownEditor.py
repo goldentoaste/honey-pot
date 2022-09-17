@@ -1,20 +1,25 @@
 import os
+from hashlib import md5
+from os import path
+from random import randint
 from time import time
 from typing import List
-from PyQt5.QtWidgets import QTextEdit, QTextBrowser
-from PyQt5.QtCore import QMimeData, pyqtSignal, QUrl
+
+
+from PyQt5.QtCore import QMimeData, QUrl, pyqtSignal, QSize
 from PyQt5.QtGui import QImage
-from utils import cacheLocation, mdImageRegex
-from random import randint
-from hashlib import md5
-from urllib.parse import urlparse
-from os import path
+from PyQt5.QtWidgets import QTextBrowser, QTextEdit
+
 from imageCache import CacheManager
+from utils import cacheLocation, mdImageRegex, mdCodeBlockRegex
+import textwrap
+import html
 
 copyCommand = "copy" if os.name == "nt" else "cp"  # copy for windows, cp for unix systems
 backSlash = "\\"
 
 imageLocations = CacheManager(r"D:\PythonProject\stickyMarkdown\testCache", 5)
+
 
 def cleanSlash(d: str):
     """
@@ -24,36 +29,48 @@ def cleanSlash(d: str):
 
 
 class MarkdownPreview(QTextBrowser):
-    
+
     fileAddedSignal = pyqtSignal(str)
-    
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.cache = CacheManager(r"D:\PythonProject\stickyMarkdown\testCache", 5)
-        
-        
+
     def setMarkdown(self, markdown: str) -> None:
-        
+        # fixing code blocks
+        "========================================================"
         t0 = time()
+        codeBlocks = mdCodeBlockRegex.findall(markdown)
+        block : str
+        for block in codeBlocks:
+            block = textwrap.indent(html.escape(block).strip("\n").replace("\\", "\\\\"), "    ")
+            markdown = mdCodeBlockRegex.sub(f'<pre style="background-color:LightGray;">\n<p1 style="font-size: 12px;">\n\n{block}\n</p1></pre>', markdown, 1)
+        print("code block processing took", time() - t0)
+        "========================================================"
+        # print(markdown)
+        super().setMarkdown(markdown)
+        # print(self.toHtml())
+
+        # loading images
+        "========================================================"
         imageLinks = mdImageRegex.findall(markdown)
-        print(f"searching for image links took: {time() - t0}")
-        
-        t1 = time()
         for link in imageLinks:
-            print(f"trying to loading image: {link}")
-            
-            cachedFile = self.cache.getFile(link)
+            cachedFile, image = self.cache.getFile(link)
             if cachedFile:
-                self.document().addResource(2, QUrl(link), QImage(cachedFile))
-        print(f"loading images took : {time() - t1}")
-        return super().setMarkdown(markdown)
-    
-    
-    
+                self.document().addResource(2, QUrl(link), image)
+        "========================================================"
+        
+        # adjust size of contents
+        self.document().adjustSize()
+        self.resize(QSize(self.width() + 1, self.height() + 1))
+        self.resize(QSize(self.width() - 1, self.height() - 1))
+
+
 class MarkdownEditor(QTextEdit):
     """
     class used to inject markdown behaviour into a QTextEdit
     """
+
     fileAddedSignal = pyqtSignal(str)
 
     def __init__(self, *args, **kwargs) -> None:
@@ -65,7 +82,6 @@ class MarkdownEditor(QTextEdit):
 
     def createMimeDataFromSelection(self) -> QMimeData:
         return super().createMimeDataFromSelection()
-    
 
     def insertFromMimeData(self, source: QMimeData) -> None:
         print(source.formats())
@@ -80,9 +96,7 @@ class MarkdownEditor(QTextEdit):
             if not imagedata:
                 return
 
-            imagePath = path.join(
-                cacheLocation, md5(f"{time()}{randint(0, 999)}".encode("ascii")).hexdigest() + ".jpg"
-            )
+            imagePath = path.join(cacheLocation, md5(f"{time()}{randint(0, 999)}".encode("ascii")).hexdigest() + ".jpg")
             imagedata.save(imagePath, "JPG", 85)
             self.fileAddedSignal.emit(imagePath)
             return self.insertPlainText(f"![pasted image]({imagePath})")
@@ -113,4 +127,3 @@ class MarkdownEditor(QTextEdit):
                     print(f"url is not a local file uri: {url}")
 
         return super().insertFromMimeData(source)
-

@@ -349,6 +349,8 @@ class Note(Ui_Note, ScaleableWindowFrame):
             self.preview.verticalScrollBar().setValue(self.previewScroll)
             self.saveContent()
             print(f"update took {time()-t0}")
+        
+        self.preview.document().adjustSize()
 
     def startEditing(self):
 
