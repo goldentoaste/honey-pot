@@ -1,5 +1,20 @@
 # screenCap
+## test
+### stuff
+#### stuff
+##### sadas
+###### asdasd
+sss
+-------
+sss
+**ssss more** asdsa**
 
+> asdas
+
+```
+stuff here
+
+```
 A Windows(only) program made in python with the intention to replicate a old Japanese program named 'SETUNA', which lacks an English translation and has minor graphics compatibilities issues with modern systems.
 
 This program allows you to take screenshots, crop a section of it, and pin it to be always on top, along with many other features for productivity gains.
@@ -15,6 +30,7 @@ Here is a [modernized](https://github.com/tylearymf/SETUNA2) version of SETUNA, 
 # Usage
 
 ## Main menu:
+
 
 - ✔ Run on startup: to run screenCap on system startup. (done by placing a shortcut in ~Users\{user name}\AppData\Roaming\Microsoft\Windows )
 

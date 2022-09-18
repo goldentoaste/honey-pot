@@ -13,7 +13,6 @@ from PyQt5.QtGui import (
     QMouseEvent,
     QPixmap,
     QTextBlock,
-    QTextCursor,
 
 )
 from PyQt5.QtWidgets import QApplication, QFrame, QWidget
@@ -269,9 +268,9 @@ class Note(Ui_Note, ScaleableWindowFrame):
 
     def setupStyles(self):
         # fonts stuff
-        QFontDatabase.addApplicationFont(r"GUI/Raleway-Light.ttf")
+        QFontDatabase.addApplicationFont(r"GUI/Roboto-Regular.ttf")
         font = QFont()
-        font.setFamily("Raleway")
+        font.setFamily("Roboto")
 
         font.setWeight(35)
         font.setPointSize(11)

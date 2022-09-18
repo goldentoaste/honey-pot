@@ -2,7 +2,7 @@ import sys
 import os
 import re
 
-from time import time
+
 #FIXME dev location adas
 cacheLocation = r"D:\PythonProject\stickyMarkdown\testCache"
 
@@ -27,3 +27,9 @@ if __name__ == "__main__":
         for match in res:
             print(type(match))
             print(match)
+    
+
+
+
+
+

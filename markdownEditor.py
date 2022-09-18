@@ -14,6 +14,7 @@ from imageCache import CacheManager
 from utils import cacheLocation, mdImageRegex, mdCodeBlockRegex
 import textwrap
 import html
+from syntaxHighlighting import Highlighter
 
 copyCommand = "copy" if os.name == "nt" else "cp"  # copy for windows, cp for unix systems
 backSlash = "\\"
@@ -76,7 +77,8 @@ class MarkdownEditor(QTextEdit):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.setAcceptRichText(False)
-
+        self.highlighter = Highlighter(self.document())
+    
     def canInsertFromMimeData(self, source: QMimeData) -> bool:
         return super().canInsertFromMimeData(source)
 
