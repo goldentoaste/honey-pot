@@ -46,13 +46,13 @@ class CacheManager:
         # try to download the link
         if not isUrl(url):
             print("not an url")
-            return None
+            return None, None
 
         try:
             result = requests.get(url)
         except RequestException:
             print("Web request failed")
-            return None
+            return None, None
 
         print(result.headers)
         try:

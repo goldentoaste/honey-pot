@@ -3,7 +3,7 @@ from time import time, sleep
 
 from typing import Dict, Literal, Tuple
 
-from PyQt5.QtCore import QPoint, Qt, QThread, pyqtSignal, QRect, QMargins, QUrl
+from PyQt5.QtCore import QPoint, Qt, QThread, pyqtSignal, QRect, QMargins, QUrl, QSizeF
 from PyQt5.QtGui import (
     QFont,
     QFontDatabase,
@@ -13,6 +13,7 @@ from PyQt5.QtGui import (
     QMouseEvent,
     QPixmap,
     QTextBlock,
+    QTextDocument
 
 )
 from PyQt5.QtWidgets import QApplication, QFrame, QWidget
@@ -146,7 +147,9 @@ class ScaleableWindowFrame(QWidget):
             h = None
 
         direction = (v, h)
+        print("hovering!!!",time())
         if direction != self.prevDir:
+            print("setting cursor", self)
             self.setCursor(ScaleableWindowFrame.directionCursor[(v, h)])
             self.prevDir = direction
         a0.accept()
@@ -244,10 +247,13 @@ class Note(Ui_Note, ScaleableWindowFrame):
         self.savingDone = True  # used as a lock for the async saving function
         self.previewScroll = 0
         self.updateThread: NoteUpdateThread = None
+
         self.startEditing()
 
         self.setupStyles()
         self.setupEvents()
+        
+    
 
     def setupEvents(self):
         self.setMouseTracking(True)
@@ -265,7 +271,9 @@ class Note(Ui_Note, ScaleableWindowFrame):
         ignoreEdgeDrag(self.previewLabel, self, ignoreMargin)
         
         # x = (ignoreHover(item) for item in (self.pinButton, self.newNoteButton, self.editButton, self.minimizeButton, self.closeButton, self.frame))
+    
 
+    
     def setupStyles(self):
         # fonts stuff
         QFontDatabase.addApplicationFont(r"GUI/Roboto-Regular.ttf")
@@ -322,6 +330,7 @@ class Note(Ui_Note, ScaleableWindowFrame):
 
         if not self.savingDone:
             return
+        
         self.savingThread = Thread(target=save)
         self.savingThread.start()
 
@@ -348,8 +357,14 @@ class Note(Ui_Note, ScaleableWindowFrame):
             self.preview.verticalScrollBar().setValue(self.previewScroll)
             self.saveContent()
             print(f"update took {time()-t0}")
-        
-        self.preview.document().adjustSize()
+        doc = self.preview.document()
+
+        if doc.idealWidth() >= self.preview.width():
+            doc.adjustSize()
+       
+        # self.textDocument.adjustSize()
+        # if self.textDocument.size().width() < self.preview.width():
+        #     self.textDocument.setTextWidth(self.preview.width() - 15)
 
     def startEditing(self):
 
@@ -440,6 +455,10 @@ class NoteUpdateThread(QThread):
     def __init__(self, parent: Note = None) -> None:
         super().__init__(parent)
         self.shouldRun = True
+
+    def start(self) -> None:
+        self.shouldRun = True
+        return super().start()
 
     def stop(self):
         self.shouldRun = False
