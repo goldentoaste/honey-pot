@@ -66,7 +66,6 @@ class ScaleableWindowFrame(QWidget):
     }
 
     def mousePressEvent(self, a0: QMouseEvent) -> None:
-
         if a0.buttons() == Qt.MouseButton.LeftButton:
             self.lastPos = a0.globalPos()
         a0.accept()
@@ -147,7 +146,7 @@ class ScaleableWindowFrame(QWidget):
             h = None
 
         direction = (v, h)
-        print("hovering!!!",time())
+
         if direction != self.prevDir:
             print("setting cursor", self)
             self.setCursor(ScaleableWindowFrame.directionCursor[(v, h)])

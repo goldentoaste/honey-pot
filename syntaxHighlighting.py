@@ -1,10 +1,10 @@
-from typing import List, NamedTuple
+from typing import List, NamedTuple, Tuple
 
 from PyQt5.QtCore import (QRegularExpression, QRegularExpressionMatch,
                           QRegularExpressionMatchIterator)
 from PyQt5.QtGui import (QColor, QFont, QSyntaxHighlighter, QTextCharFormat,
                          QTextDocument)
-
+from enum import IntFlag, auto
 reflags = QRegularExpression.PatternOption
 
 
@@ -18,10 +18,9 @@ class SyntaxColor:
     comments = QColor("#928374")
     # text = QColor("#d4be98") # generic text
 
+NoneState = 0
+CodeBLockState = 2 # check state using prime numbers and modulo
 
-class HighlightRule(NamedTuple):
-    regex: QRegularExpression
-    format: QTextCharFormat
 
 
 class Highlighter(QSyntaxHighlighter):
@@ -86,34 +85,63 @@ class Highlighter(QSyntaxHighlighter):
             (r"(?<!\*)[*_]{2}(?!\s)([^*_]+?)(?<!\s)[*_]{2}(?!\*)", self.bold),  # **BOLD**
             (r"(?<!\*)[*_]{3}(?!\s)([^*_]+?)(?<!\s)[*_]{3}(?!\*)", self.boldItalic),  # ***BOLD_ITALIC***
             (r"^([-*]{3,})$", self.symbol),
+            (r"(?:^|\s)(`[^`]+?`)(?:\s|$)", self.keyword)
         )
 
         self.linkPattern = QRegularExpression(r"\[([\s\S]*?)\]\(([\s\S]+?)\)", reflags.MultilineOption)
 
-        self.genericRules: List[HighlightRule] = [
+        self.genericRules: List[Tuple[QRegularExpression, QTextCharFormat]] = [
             (QRegularExpression(pattern, reflags.MultilineOption), format) for pattern, format in mdGenericPatterns
         ]
+        
+        self.codeBlockStartPattern = QRegularExpression(r"^```(text)|(python)|(py)$", reflags.MultilineOption)
+        self.codeblockLangPattern = QRegularExpression(r"(text)|(python)|(py)")
+        self.codeBlockEndPattern = QRegularExpression(r"```$",reflags.MultilineOption)
+        self.codeStartIndex = 0
+    
+    
 
     def highlightBlock(self, text: str) -> None:
-
         for rule, format in self.genericRules:
             matches: QRegularExpressionMatchIterator = rule.globalMatch(text)
 
             while matches.hasNext():
                 match: QRegularExpressionMatch = matches.next()
-                print("match", match.capturedTexts())
                 self.setFormat(match.capturedStart(), match.capturedLength(), format)
 
         # format links
         linkMatches = self.linkPattern.globalMatch(text)
-
         while linkMatches.hasNext():
             match: QRegularExpressionMatch = linkMatches.next()
-
             self.setFormat(match.capturedStart(1), match.capturedLength(1), self.numeric)
             self.setFormat(match.capturedStart(2), match.capturedLength(2), self.function)
+        
+        
+        #codeblock formatting
+        self.setCurrentBlockState(1)
+        startIndex = 0
+        matchLength = 0
+        # if prevState is not comment
+        if self.previousBlockState() % CodeBLockState:
+            startMatch = self.codeBlockStartPattern.match(text)
+            startIndex = startMatch.capturedStart()
+            
+            
+        if startIndex >= 0:
+            endMatch = self.codeBlockEndPattern.match(text)
+            endindex = endMatch.capturedStart()
+            
+            if endindex == -1:
+                matchLength = len(text) - startIndex
+                self.setCurrentBlockState(self.currentBlockState() * CodeBLockState)
+            else:
+                matchLength = endindex - startIndex + endMatch.capturedLength()
+            self.setFormat(startIndex, matchLength, self.keyword)
+   
+            if self.previousBlockState() % CodeBLockState:
+                langMatch = self.codeblockLangPattern.match(text)
+                if langMatch.capturedStart() != -1:
+                    return
+                    self.setFormat(langMatch.capturedStart(), langMatch.capturedLength(), self.builtin)
+            
 
-    def testing(self):
-        print("in testing")
-        self.keywordFormat = QTextCharFormat()
-        self.keywordFormat.setForeground(SyntaxColor.keyWord)
