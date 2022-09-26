@@ -148,7 +148,7 @@ class ScaleableWindowFrame(QWidget):
         direction = (v, h)
 
         if direction != self.prevDir:
-            print("setting cursor", self)
+            # print("setting cursor", self)
             self.setCursor(ScaleableWindowFrame.directionCursor[(v, h)])
             self.prevDir = direction
         a0.accept()

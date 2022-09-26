@@ -1,10 +1,3 @@
-
-```python
-sadasd da
+```py
+asdasd
 ```
-
-```text
-dasd
-sdasd
-```
-

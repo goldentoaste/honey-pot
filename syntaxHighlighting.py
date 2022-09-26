@@ -1,12 +1,19 @@
+from re import L
 from typing import List, NamedTuple, Tuple
 
 from PyQt5.QtCore import (QRegularExpression, QRegularExpressionMatch,
                           QRegularExpressionMatchIterator)
 from PyQt5.QtGui import (QColor, QFont, QSyntaxHighlighter, QTextCharFormat,
                          QTextDocument)
-from enum import IntFlag, auto
+from enum import Enum, IntFlag, auto
 reflags = QRegularExpression.PatternOption
 
+
+class Languages(Enum):
+    python = auto()
+    javascript = auto()
+    text = auto()
+    none = auto()
 
 class SyntaxColor:
     keyWord = QColor("#ea6962")  # like def, return, raise
@@ -18,12 +25,32 @@ class SyntaxColor:
     comments = QColor("#928374")
     # text = QColor("#d4be98") # generic text
 
+
+
+
+class PreviewHighlighter(QSyntaxHighlighter):
+    
+    def __init__(self, parent: QTextDocument):
+        super().__init__(parent)
+        self.blockLangs: List[Languages] = []
+        self.codeBlockSep = "\u200B" # a zero width space to mark beginning and end of code blocks
+        self.blockIndex = 0
+        
+    def updateCodeBlock(self, newBlocks):
+        self.blockLangs = newBlocks
+        self.blockIndex = 0
+
+
+    def highlightBlock(self, text: str) -> None:
+        print("in preview", repr(text.encode('utf8')))
+        
+
+
+
 NoneState = 0
 CodeBLockState = 2 # check state using prime numbers and modulo
 
-
-
-class Highlighter(QSyntaxHighlighter):
+class EditorHighlighter(QSyntaxHighlighter):
     def __init__(self, parent: QTextDocument, highlightMakrdown=True):
 
         super().__init__(parent)
@@ -94,7 +121,7 @@ class Highlighter(QSyntaxHighlighter):
             (QRegularExpression(pattern, reflags.MultilineOption), format) for pattern, format in mdGenericPatterns
         ]
         
-        self.codeBlockStartPattern = QRegularExpression(r"^```(text)|(python)|(py)$", reflags.MultilineOption)
+        self.codeBlockStartPattern = QRegularExpression(r"^```((text)|(python)|(py))$", reflags.MultilineOption)
         self.codeblockLangPattern = QRegularExpression(r"(text)|(python)|(py)")
         self.codeBlockEndPattern = QRegularExpression(r"```$",reflags.MultilineOption)
         self.codeStartIndex = 0
@@ -141,7 +168,6 @@ class Highlighter(QSyntaxHighlighter):
             if self.previousBlockState() % CodeBLockState:
                 langMatch = self.codeblockLangPattern.match(text)
                 if langMatch.capturedStart() != -1:
-                    return
                     self.setFormat(langMatch.capturedStart(), langMatch.capturedLength(), self.builtin)
             
 

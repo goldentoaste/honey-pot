@@ -14,7 +14,7 @@ from imageCache import CacheManager
 from utils import cacheLocation, mdImageRegex, mdCodeBlockRegex
 import textwrap
 import html
-from syntaxHighlighting import Highlighter
+from syntaxHighlighting import EditorHighlighter, Languages, PreviewHighlighter
 
 copyCommand = "copy" if os.name == "nt" else "cp"  # copy for windows, cp for unix systems
 backSlash = "\\"
@@ -36,14 +36,28 @@ class MarkdownPreview(QTextBrowser):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.cache = CacheManager(r"D:\PythonProject\stickyMarkdown\testCache", 5)
+        self.blockTypes = [] #python, text, etc
+        self.allBlockTypes = {
+            'python': Languages.python,
+            'py': Languages.python,
+            'js': Languages.javascript,
+            'javascript': Languages.javascript,
+            'text': Languages.text,
+            'txt': Languages.text
+        }
+        self.highlighter = PreviewHighlighter(self.document())
 
     def setMarkdown(self, markdown: str) -> None:
         # fixing code blocks
         "========================================================"
         t0 = time()
+        self.blockTypes.clear()
         codeBlocks = mdCodeBlockRegex.findall(markdown)
         block : str
         for block in codeBlocks:
+            langHeader = block[:block.find("\n")]
+            self.blockTypes.append(self.allBlockTypes.get(langHeader, Languages.none))
+            block = block[block.find('\n')+1:]
             block = textwrap.indent(html.escape(block).strip("\n").replace("\\", "\\\\"), "    ")
             markdown = mdCodeBlockRegex.sub(f'<pre style="background-color:LightGray;">\n<p1 style="font-size: 12px;">\n\n{block}\n</p1></pre>', markdown, 1)
         print("code block processing took", time() - t0)
@@ -77,7 +91,7 @@ class MarkdownEditor(QTextEdit):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.setAcceptRichText(False)
-        self.highlighter = Highlighter(self.document())
+        self.highlighter = EditorHighlighter(self.document())
     
     def canInsertFromMimeData(self, source: QMimeData) -> bool:
         return super().canInsertFromMimeData(source)
