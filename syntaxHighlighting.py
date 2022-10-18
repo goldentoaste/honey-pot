@@ -33,20 +33,68 @@ class PreviewHighlighter(QSyntaxHighlighter):
     def __init__(self, parent: QTextDocument):
         super().__init__(parent)
         self.blockLangs: List[Languages] = []
+        self.blockLengths : List[Tuple[int, int]] = [] # Tuple[Start, EndIndex]
+        
+        
         self.codeBlockSep = "\u200B" # a zero width space to mark beginning and end of code blocks
-        self.blockIndex = 0
+ 
+        self.codeStartPattern = QRegularExpression("^\u200b", reflags.MultilineOption)
+        self.codeEndPattern = QRegularExpression("\u200c$", reflags.MultilineOption)
+        
+        
+        self.startIndex  = 0
+        self.matchLength = 0
+        
+        self.offset = 0
+        
+    def reset(self):
+        
+        self.blockLangs.clear()
+        self.blockLengths.clear()
+        
+        self.startIndex = 0
+        self.matchLength = 0 
+        self.offset = 0
+
         
     def updateCodeBlock(self, newBlocks):
         self.blockLangs = newBlocks
-        self.blockIndex = 0
+        self.matchLength = 0
 
 
     def highlightBlock(self, text: str) -> None:
         print("in preview", repr(text.encode('utf8')))
         
+        print(self.currentBlock(), self.currentBlock().previous().isValid(), self.currentBlock().previous().length())
+        
+        if self.currentBlock().previous() is None: # at first block
+            self.reset()
 
-
-
+        self.setCurrentBlockState(0)
+        
+        
+        if self.previousBlockState() != 1: # prev block is not comment
+            self.startIndex = self.codeStartPattern.match(text).capturedStart()
+        
+        if self.startIndex >= 0: # code block starting here
+            
+            endMatch = self.codeEndPattern.match(text)
+            endindex = endMatch.capturedStart()
+            
+            if endindex == -1: # end not found yet
+                self.matchLength += len(text)
+                self.setCurrentBlockState(1)
+            else: # end index found on this line
+                self.blockLengths.append((self.startIndex, self.matchLength + self.startIndex + endMatch.capturedLength()))
+                self.startIndex = 0
+                self.matchLength = 0
+                
+        self.form
+                
+        
+        if self.currentBlock().next() is None: # at end
+            print("wee woo wee woo")
+            print(self.blockLengths)
 NoneState = 0
 CodeBLockState = 2 # check state using prime numbers and modulo
 

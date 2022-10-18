@@ -59,7 +59,7 @@ class MarkdownPreview(QTextBrowser):
             self.blockTypes.append(self.allBlockTypes.get(langHeader, Languages.none))
             block = block[block.find('\n')+1:]
             block = textwrap.indent(html.escape(block).strip("\n").replace("\\", "\\\\"), "    ")
-            markdown = mdCodeBlockRegex.sub(f'<pre style="background-color:LightGray;">\n<p1 style="font-size: 12px;">\n\n{block}\n</p1></pre>', markdown, 1)
+            markdown = mdCodeBlockRegex.sub(f'<pre style="background-color:LightGray;">\n<p1 style="font-size: 12px;">\n\n\u200b{block}\u200c\n</p1></pre>', markdown, 1)
         print("code block processing took", time() - t0)
         "========================================================"
         # print(markdown)
