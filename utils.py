@@ -1,6 +1,9 @@
 import os
 import re
 import sys
+from PyQt5.QtCore import (QRegularExpression, QRegularExpressionMatch,
+                          QRegularExpressionMatchIterator)
+reflags = QRegularExpression.PatternOption
 
 # FIXME dev location adas
 cacheLocation = r"D:\PythonProject\stickyMarkdown\testCache"
@@ -9,53 +12,12 @@ mdImageRegex = re.compile(r"\!\[[^\[\]]+\]\(([^\(\)]+)\)")  # finds all the imag
 
 mdCodeBlockRegex = re.compile(r"```([\s\S]*?)```")
 
-pythonKeywods = [
-    "False",
-    "None",
-    "True",
-    "as",
-    "assert",
-    "async",
-    "await",
-    "break",
-    "class",
-    "continue",
-    "def",
-    "del",
-    "elif",
-    "else",
-    "except",
-    "finally",
-    "for",
-    "from",
-    "global",
-    "if",
-    "import",
-    "in",
-    "lambda",
-    "nonlocal",
-    "not",
-    "pass",
-    "raise",
-    "return",
-    "try",
-    "while",
-    "with",
-    "yield",
-]
-
-pythonOperators = [
-    "and", "or", "not", "is", "<",">","=", "!","+","-","/","*","^", "%", "//", "&","~"
-]
-
-pythonTypes = [
-    "int","float","str","dict", "set", "complex", "list","tuple","range", "bytes", "bytearray"
-]
 
 def getResource(relative_path):
     """Get absolute path to resource, works for dev and for PyInstaller"""
     try:
         base_path = sys._MEIPASS
+    
     except AttributeError:
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)

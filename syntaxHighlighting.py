@@ -1,3 +1,4 @@
+from enum import Enum, IntFlag, auto
 from re import L
 from typing import List, NamedTuple, Tuple
 
@@ -5,7 +6,11 @@ from PyQt5.QtCore import (QRegularExpression, QRegularExpressionMatch,
                           QRegularExpressionMatchIterator)
 from PyQt5.QtGui import (QColor, QFont, QSyntaxHighlighter, QTextCharFormat,
                          QTextDocument)
-from enum import Enum, IntFlag, auto
+
+from codeparser import (addToState, emptyState, pythonState, removeState,
+                        stateContains)
+from pythonParser import PythonParser
+
 reflags = QRegularExpression.PatternOption
 
 
@@ -14,6 +19,7 @@ class Languages(Enum):
     javascript = auto()
     text = auto()
     none = auto()
+
 
 class SyntaxColor:
     keyWord = QColor("#ea6962")  # like def, return, raise
@@ -26,77 +32,65 @@ class SyntaxColor:
     # text = QColor("#d4be98") # generic text
 
 
-
-
 class PreviewHighlighter(QSyntaxHighlighter):
-    
     def __init__(self, parent: QTextDocument):
         super().__init__(parent)
         self.blockLangs: List[Languages] = []
-        self.blockLengths : List[Tuple[int, int]] = [] # Tuple[Start, EndIndex]
-        
-        
-        self.codeBlockSep = "\u200B" # a zero width space to mark beginning and end of code blocks
- 
-        self.codeStartPattern = QRegularExpression("^\u200b", reflags.MultilineOption)
-        self.codeEndPattern = QRegularExpression("\u200c$", reflags.MultilineOption)
-        
-        
-        self.startIndex  = 0
-        self.matchLength = 0
-        
-        self.offset = 0
-        
-    def reset(self):
-        
-        self.blockLangs.clear()
-        self.blockLengths.clear()
-        
+        self.blockLengths: List[Tuple[int, int]] = []  # Tuple[Start, EndIndex]
+
+        self.codeBlockSep = "\u200B"  # a zero width space to mark beginning and end of code blocks
+
+        self.pythonStart = QRegularExpression("^\\x{200b}", reflags.MultilineOption)
+        self.jsStart = QRegularExpression("^\u200b\u200b", reflags.MultilineOption)
+        self.codeEndPattern = QRegularExpression("\\x{200c}$", reflags.MultilineOption)
+
         self.startIndex = 0
-        self.matchLength = 0 
+        self.matchLength = 0
+
         self.offset = 0
 
-        
+        self.pythonParser = PythonParser(self)
+
+    def reset(self):
+
+        self.blockLangs.clear()
+        self.blockLengths.clear()
+
+        self.startIndex = 0
+        self.matchLength = 0
+        self.offset = 0
+
     def updateCodeBlock(self, newBlocks):
         self.blockLangs = newBlocks
         self.matchLength = 0
 
-
     def highlightBlock(self, text: str) -> None:
         print("in preview", repr(text.encode('utf8')))
-        
-        print(self.currentBlock(), self.currentBlock().previous().isValid(), self.currentBlock().previous().length())
-        
-        if self.currentBlock().previous() is None: # at first block
-            self.reset()
 
-        self.setCurrentBlockState(0)
+        startMatch= self.pythonStart.match(text)
+        endMatch = self.codeEndPattern.match(text)
         
-        
-        if self.previousBlockState() != 1: # prev block is not comment
-            self.startIndex = self.codeStartPattern.match(text).capturedStart()
-        
-        if self.startIndex >= 0: # code block starting here
-            
-            endMatch = self.codeEndPattern.match(text)
-            endindex = endMatch.capturedStart()
-            
-            if endindex == -1: # end not found yet
-                self.matchLength += len(text)
-                self.setCurrentBlockState(1)
-            else: # end index found on this line
-                self.blockLengths.append((self.startIndex, self.matchLength + self.startIndex + endMatch.capturedLength()))
-                self.startIndex = 0
-                self.matchLength = 0
-                
-        self.form
+        if stateContains(self.previousBlockState(), pythonState):
+            self.pythonParser.highlightBlock(text)
+            if endMatch.capturedStart() >= 0:
+                self.setCurrentBlockState(removeState(self.currentBlockState(), pythonState))
+        else:
+            print("checking for start of python blokc", startMatch.capturedStart())
+            if startMatch.capturedStart() >= 0 and endMatch.capturedStart() < 0:
+                self.pythonParser.highlightBlock(text)
+                self.setCurrentBlockState(addToState(self.currentBlockState(), pythonState))
                 
         
-        if self.currentBlock().next() is None: # at end
-            print("wee woo wee woo")
-            print(self.blockLengths)
+        
+            
+        
+        
+        
+
+
 NoneState = 0
-CodeBLockState = 2 # check state using prime numbers and modulo
+CodeBLockState = 2  # check state using prime numbers and modulo
+
 
 class EditorHighlighter(QSyntaxHighlighter):
     def __init__(self, parent: QTextDocument, highlightMakrdown=True):
@@ -160,26 +154,26 @@ class EditorHighlighter(QSyntaxHighlighter):
             (r"(?<!\*)[*_]{2}(?!\s)([^*_]+?)(?<!\s)[*_]{2}(?!\*)", self.bold),  # **BOLD**
             (r"(?<!\*)[*_]{3}(?!\s)([^*_]+?)(?<!\s)[*_]{3}(?!\*)", self.boldItalic),  # ***BOLD_ITALIC***
             (r"^([-*]{3,})$", self.symbol),
-            (r"(?:^|\s)(`[^`]+?`)(?:\s|$)", self.keyword)
+            (r"(?:^|\s)(`[^`]+?`)(?:\s|$)", self.keyword),
         )
 
         self.linkPattern = QRegularExpression(r"\[([\s\S]*?)\]\(([\s\S]+?)\)", reflags.MultilineOption)
 
         self.genericRules: List[Tuple[QRegularExpression, QTextCharFormat]] = [
-            (QRegularExpression(pattern, reflags.MultilineOption), format) for pattern, format in mdGenericPatterns
+            (QRegularExpression(pattern, reflags.MultilineOption), format)
+            for pattern, format in mdGenericPatterns
         ]
-        
-        self.codeBlockStartPattern = QRegularExpression(r"^```((text)|(python)|(py))$", reflags.MultilineOption)
+
+        self.codeBlockStartPattern = QRegularExpression(
+            r"^```((text)|(python)|(py))$", reflags.MultilineOption
+        )
         self.codeblockLangPattern = QRegularExpression(r"(text)|(python)|(py)")
-        self.codeBlockEndPattern = QRegularExpression(r"```$",reflags.MultilineOption)
+        self.codeBlockEndPattern = QRegularExpression(r"```$", reflags.MultilineOption)
         self.codeStartIndex = 0
-    
-    
 
     def highlightBlock(self, text: str) -> None:
         for rule, format in self.genericRules:
             matches: QRegularExpressionMatchIterator = rule.globalMatch(text)
-
             while matches.hasNext():
                 match: QRegularExpressionMatch = matches.next()
                 self.setFormat(match.capturedStart(), match.capturedLength(), format)
@@ -190,9 +184,8 @@ class EditorHighlighter(QSyntaxHighlighter):
             match: QRegularExpressionMatch = linkMatches.next()
             self.setFormat(match.capturedStart(1), match.capturedLength(1), self.numeric)
             self.setFormat(match.capturedStart(2), match.capturedLength(2), self.function)
-        
-        
-        #codeblock formatting
+
+        # codeblock formatting
         self.setCurrentBlockState(1)
         startIndex = 0
         matchLength = 0
@@ -200,22 +193,19 @@ class EditorHighlighter(QSyntaxHighlighter):
         if self.previousBlockState() % CodeBLockState:
             startMatch = self.codeBlockStartPattern.match(text)
             startIndex = startMatch.capturedStart()
-            
-            
+
         if startIndex >= 0:
             endMatch = self.codeBlockEndPattern.match(text)
             endindex = endMatch.capturedStart()
-            
+
             if endindex == -1:
                 matchLength = len(text) - startIndex
                 self.setCurrentBlockState(self.currentBlockState() * CodeBLockState)
             else:
                 matchLength = endindex - startIndex + endMatch.capturedLength()
             self.setFormat(startIndex, matchLength, self.keyword)
-   
+
             if self.previousBlockState() % CodeBLockState:
                 langMatch = self.codeblockLangPattern.match(text)
                 if langMatch.capturedStart() != -1:
                     self.setFormat(langMatch.capturedStart(), langMatch.capturedLength(), self.builtin)
-            
-
