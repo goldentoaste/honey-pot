@@ -60,7 +60,7 @@ class PreviewHighlighter(QSyntaxHighlighter):
         self.matchLength = 0
         self.offset = 0
 
-    def updateCodeBlock(self, newBlocks):
+    def updateCodeBlock(self, newBlocks):   
         self.blockLangs = newBlocks
         self.matchLength = 0
 
@@ -80,12 +80,6 @@ class PreviewHighlighter(QSyntaxHighlighter):
                 self.pythonParser.highlightBlock(text)
                 self.setCurrentBlockState(addToState(self.currentBlockState(), pythonState))
                 
-        
-        
-            
-        
-        
-        
 
 
 NoneState = 0
