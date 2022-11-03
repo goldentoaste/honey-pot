@@ -78,8 +78,13 @@ pythonBuiltins = [
     "zip",
     "open",
 ]
+'''
+original 
 
-pythonBuiltinRegex = QRegularExpression(f"\\b({'|'.join(pythonBuiltins)})\\b")
+\\b(int|float|str|dict|set|complex|list|tuple|range|bytes|bytearray|type|all|any|ascii|bin|bool|callable|classmethod|chr|hex|id|input|iter|super|zip|open)\\b
+'''
+
+pythonBuiltinRegex = QRegularExpression("\\b(int|float|str|dict|set|complex|list|tuple|range|bytes|bytearray|type|all|any|ascii|bin|bool|callable|classmethod|chr|hex|id|input|iter|super|zip|open)\\b")
 
 class SyntaxColor:
     keyWord = QColor("#ea6962")  # like def, return, raise
@@ -135,11 +140,13 @@ class PythonParser(AbstractParser):
         ]
     
     def highlightBlock(self, text: str):
-        
         for rule, format in self.genericRules:
+            print(rule, format)
             matches : QRegularExpressionMatchIterator = rule.globalMatch(text)            
             while matches.hasNext():
+
                 match : QRegularExpressionMatch = matches.next()
+                print(match)
                 self.setFormat(match.capturedStart(), match.capturedLength(), format)
                 
                 

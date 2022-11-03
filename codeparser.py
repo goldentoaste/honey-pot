@@ -14,7 +14,7 @@ def addToState(state:int, val:int):
     return state * val
 
 def removeState(state:int, val:int):
-    while (temp := state // val) != 0:
+    while (temp := (state // val)) != 0:
         state = temp
     if state == 1:
         return 0
@@ -26,6 +26,13 @@ pythonState = 2
 jsState = 3
 pythonMLCommentState = 5
 
+if __name__ == '__main__':
+    
+    state = emptyState
+    state = addToState(state, pythonState)
+    print(state)
+    state = removeState(state, pythonState)
+    print(state)
 
 
 
