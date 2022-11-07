@@ -3,8 +3,8 @@ from PyQt5.QtCore import (QRegularExpression, QRegularExpressionMatch,
 from PyQt5.QtGui import (QColor, QFont, QSyntaxHighlighter, QTextCharFormat,
                          QTextDocument)
 
+from codeparser import AbstractParser, addToState, removeState, stateContains
 
-from codeparser import AbstractParser, stateContains, addToState, removeState
 reflags = QRegularExpression.PatternOption
 
 
@@ -43,11 +43,33 @@ pythonKeywords = [
     "yield",
 ]
 
-pythonKeywordsRegex = QRegularExpression(f"\\b({'|'.join(pythonKeywords)})\\b")
+pythonKeywordsRegex = QRegularExpression(
+    f"\\b((?:False|None|True|a(?:s(?:(?:sert|ync))?|wait)|break|c(?:lass|ontinue)|de[fl]|e(?:l(?:if|se)|xcept)|f(?:inally|or|rom)|global|i(?:mport|[fn])|lambda|no(?:nlocal|t)|pass|r(?:aise|eturn)|try|w(?:hile|ith)|yield))\\b"
+)
 
-pythonOperators = ["and", "or", "not", "is", "<", ">", "=", "!", "\+", "-", "\/", "\*", "^", "%", "\/\/", "&", "~"]
+pythonOperators = [
+    "and",
+    "or",
+    "not",
+    "is",
+    "<",
+    ">",
+    "=",
+    "!",
+    "\+",
+    "-",
+    "\/",
+    "\*",
+    "^",
+    "%",
+    "\/\/",
+    "&",
+    "~",
+]
 
-pythonOpRegex = QRegularExpression(f"\\b({'|'.join(pythonOperators)})\\b")
+pythonOpRegex = QRegularExpression(f"(and|or|not|is|<|>|=|!|\+|-|\/|\*|^|%|\/\/|&|~)")
+print(f"\\b({'|'.join(pythonOperators)})\\b")
+
 
 pythonBuiltins = [
     "int",
@@ -78,31 +100,33 @@ pythonBuiltins = [
     "zip",
     "open",
 ]
-'''
-original 
 
-\\b(int|float|str|dict|set|complex|list|tuple|range|bytes|bytearray|type|all|any|ascii|bin|bool|callable|classmethod|chr|hex|id|input|iter|super|zip|open)\\b
-'''
+pythonBuiltinRegex = QRegularExpression(
+    "\\b((?:a(?:ll|ny|scii)|b(?:in|ool|yte(?:array|s))|c(?:allable|hr|lassmethod|omplex)|dict|float|hex|i(?:n(?:put|t)|ter|d)|list|open|range|s(?:et|tr|uper)|t(?:uple|ype)|zip))\\b"
+)
 
-pythonBuiltinRegex = QRegularExpression("\\b(int|float|str|dict|set|complex|list|tuple|range|bytes|bytearray|type|all|any|ascii|bin|bool|callable|classmethod|chr|hex|id|input|iter|super|zip|open)\\b")
+
+pythonNumberics = QRegularExpression("[1-9_.]+")
+
 
 class SyntaxColor:
     keyWord = QColor("#ea6962")  # like def, return, raise
     symbol = QColor("#e78a4e")  # +, -, /, ^ etc
     string = QColor("#d8a657")
     function = QColor("#a9b665")
+    obj = QColor('#89b482')
     builtin = QColor("#7daea3")  # builtin or system class
     numeric = QColor("#d3869b")  # or used for specials, for example import statements
     comments = QColor("#928374")
 
+
 class PythonParser(AbstractParser):
-    
-    def __init__(self, parser:QSyntaxHighlighter):
+    def __init__(self, parser: QSyntaxHighlighter):
         super().__init__(parser)
         self.parser = parser
-        
+
         codeFont = QFont("Cascadia Code", 9)
-        
+
         self.keyword = QTextCharFormat()  # #ea6962
         self.keyword.setForeground(SyntaxColor.keyWord)
         self.keyword.setFont(codeFont)
@@ -118,6 +142,10 @@ class PythonParser(AbstractParser):
         self.function = QTextCharFormat()  # #a9b665
         self.function.setForeground(SyntaxColor.function)
         self.function.setFont(codeFont)
+        
+        self.obj = QTextCharFormat()  # #89b482
+        self.obj.setForeground(SyntaxColor.obj)
+        self.obj.setFont(codeFont)
 
         self.builtin = QTextCharFormat()  # #7daea3
         self.builtin.setForeground(SyntaxColor.builtin)
@@ -131,24 +159,49 @@ class PythonParser(AbstractParser):
         self.comment = QTextCharFormat()  # #928374
         self.comment.setForeground(SyntaxColor.comments)
         self.comment.setFont(codeFont)
-        
 
+        selfRegex = QRegularExpression("\\bself\\b")
+        self.funcRegex = QRegularExpression("([a-zA-z_]+[a-zA-z_0-9]*)\(")
+
+        self.importregex = QRegularExpression(r"(?:from\s+([\w.]+)\s+)?import\s+\(?([\w.,\s]+)(?:$|\))")
+        self.exceptionRegex = QRegularExpression(r"except\s+\(?([\w.,\s]+?)\)?(?:as|:)")
+        self.stringPrefixRegex= QRegularExpression(r"(f|u|r|b)(?:'|\")")
+        # print(self.importregex.pattern())
+        # raise RuntimeError()
         self.genericRules = [
+            (pythonOpRegex, self.symbol),
             (pythonKeywordsRegex, self.keyword),
-            (pythonOpRegex, self.symbol), 
-            (pythonBuiltinRegex, self.builtin)
+            (pythonBuiltinRegex, self.builtin),
+            (pythonNumberics, self.numeric),
+            (selfRegex, self.numeric),
         ]
-    
-    def highlightBlock(self, text: str):
-        for rule, format in self.genericRules:
-            print(rule, format)
-            matches : QRegularExpressionMatchIterator = rule.globalMatch(text)            
-            while matches.hasNext():
 
-                match : QRegularExpressionMatch = matches.next()
-                print(match)
+    def highlightBlock(self, text: str):
+        importMatchs = self.importregex.globalMatch(text)
+        
+        while importMatchs.hasNext():
+            importMatch = importMatchs.next()
+            if importMatch.captured(1) == "":
+                self.setFormat(importMatch.capturedStart(2), importMatch.capturedLength(2), self.builtin)
+            else:
+                self.setFormat(importMatch.capturedStart(1), importMatch.capturedLength(1), self.builtin)
+                self.setFormat(importMatch.capturedStart(2), importMatch.capturedLength(2), self.obj)
+        
+        
+        for rule, format in self.genericRules:
+            matches: QRegularExpressionMatchIterator = rule.globalMatch(text)
+            while matches.hasNext():
+                match: QRegularExpressionMatch = matches.next()
                 self.setFormat(match.capturedStart(), match.capturedLength(), format)
-                
-                
-                
-                
+
+        funcMatchs: QRegularExpressionMatchIterator = self.funcRegex.globalMatch(text)
+        while funcMatchs.hasNext():
+            match: QRegularExpressionMatch = funcMatchs.next()
+            self.setFormat(match.capturedStart(1), match.capturedLength(1), self.function)
+
+        
+        exceptMatch = self.exceptionRegex.match(text)
+        self.setFormat(exceptMatch.capturedStart(1), exceptMatch.capturedLength(1), self.obj)
+
+        prefixMatch = self.stringPrefixRegex.match(text)
+        self.setFormat(prefixMatch.capturedStart(1), prefixMatch.capturedLength(1), self.builtin) 

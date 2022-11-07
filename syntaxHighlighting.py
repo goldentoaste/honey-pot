@@ -65,8 +65,6 @@ class PreviewHighlighter(QSyntaxHighlighter):
         self.matchLength = 0
 
     def highlightBlock(self, text: str) -> None:
-        print("in preview", repr(text.encode('utf8')))
-
         startMatch= self.pythonStart.match(text)
         endMatch = self.codeEndPattern.match(text)
         
@@ -75,12 +73,10 @@ class PreviewHighlighter(QSyntaxHighlighter):
             if endMatch.capturedStart() < 0:
                 self.setCurrentBlockState(addToState(self.currentBlockState(), pythonState))
         else:
-            print("checking for start of python blokc", startMatch.capturedStart())
             if startMatch.capturedStart() >= 0:
                 self.pythonParser.highlightBlock(text)
                 if  endMatch.capturedStart() < 0:
                     self.setCurrentBlockState(addToState(self.currentBlockState(), pythonState))
-     
 
 NoneState = 0
 CodeBLockState = 2  # check state using prime numbers and modulo
