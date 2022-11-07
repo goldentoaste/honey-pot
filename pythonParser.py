@@ -3,7 +3,7 @@ from PyQt5.QtCore import (QRegularExpression, QRegularExpressionMatch,
 from PyQt5.QtGui import (QColor, QFont, QSyntaxHighlighter, QTextCharFormat,
                          QTextDocument)
 
-from codeparser import AbstractParser, addToState, removeState, stateContains
+from codeparser import AbstractParser, addToState, removeState, stateContains, pythonMLCommentState
 
 reflags = QRegularExpression.PatternOption
 
@@ -166,17 +166,23 @@ class PythonParser(AbstractParser):
         self.importregex = QRegularExpression(r"(?:from\s+([\w.]+)\s+)?import\s+\(?([\w.,\s]+)(?:$|\))")
         self.exceptionRegex = QRegularExpression(r"except\s+\(?([\w.,\s]+?)\)?(?:as|:)")
         self.stringPrefixRegex= QRegularExpression(r"(f|u|r|b)(?:'|\")")
-        # print(self.importregex.pattern())
-        # raise RuntimeError()
+        self.string1regex = QRegularExpression(r"\"([^\"])*\"")
+        self.string2regex = QRegularExpression(r"\'([^\'])*\'")
+        self.commentRegex = QRegularExpression(r"#[^\n]*")
+        self.multiline = QRegularExpression(r"\"\"\"|\'\'\'")
+        
         self.genericRules = [
             (pythonOpRegex, self.symbol),
             (pythonKeywordsRegex, self.keyword),
             (pythonBuiltinRegex, self.builtin),
             (pythonNumberics, self.numeric),
             (selfRegex, self.numeric),
+            (self.string1regex, self.string),
+            (self.string2regex, self.string)
         ]
 
     def highlightBlock(self, text: str):
+        
         importMatchs = self.importregex.globalMatch(text)
         
         while importMatchs.hasNext():
@@ -205,3 +211,34 @@ class PythonParser(AbstractParser):
 
         prefixMatch = self.stringPrefixRegex.match(text)
         self.setFormat(prefixMatch.capturedStart(1), prefixMatch.capturedLength(1), self.builtin) 
+    
+        # comment overrides all
+        commentMatch = self.commentRegex.match(text)
+        self.setFormat(commentMatch.capturedStart(), commentMatch.capturedLength(), self.comment) 
+        
+        # multiline strings :skull:
+        if stateContains(self.previousBlockState(), pythonMLCommentState):
+            endMatch = self.multiline.match(text)
+            if endMatch.capturedStart() < 0:
+                self.setCurrentBlockState(addToState(self.currentBlockState(), pythonMLCommentState))
+                self.setFormat(0, len(text), self.string)
+            else:
+                self.setFormat(0, endMatch.capturedEnd(), self.string)
+        else:
+            matches = self.multiline.globalMatch(text)
+            matchlist = []
+            while matches.hasNext():
+                matchlist.append(matches.next())
+            
+            if len(matchlist) == 1:
+                match : QRegularExpressionMatch= matchlist[0]
+                self.setFormat(match.capturedStart(), len(text) - match.capturedStart(), self.string)
+                self.setCurrentBlockState(addToState(self.currentBlockState(), pythonMLCommentState))
+            elif len(matchlist) > 1: # igoring multiple multiline strings occuring in the same line
+                start = matchlist[0]
+                end:QRegularExpressionMatch = matchlist[1]
+                self.setFormat(start.capturedStart(), end.capturedEnd() - start.capturedStart(), self.string)
+            
+                
+        
+        
