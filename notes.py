@@ -477,12 +477,18 @@ if __name__ == "__main__":
 
     # apply_stylesheet(app, theme='GUI/colors.xml')
 
-    with open("test.md", "r", encoding="utf8") as f:
-        n = Note(
+    n = Note(
             r"D:\PythonProject\stickyMarkdown\test.md",
             CacheManager(r"D:\PythonProject\stickyMarkdown\testCache", 5),
-            f.read(),
+           "",
         )
+
+    # with open("test.md", "r", encoding="utf8") as f:
+    #     n = Note(
+    #         r"D:\PythonProject\stickyMarkdown\test.md",
+    #         CacheManager(r"D:\PythonProject\stickyMarkdown\testCache", 5),
+    #         f.read(),
+    #     )
 
     n.show()
     sys.exit(app.exec_())
