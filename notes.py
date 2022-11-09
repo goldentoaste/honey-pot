@@ -148,7 +148,6 @@ class ScaleableWindowFrame(QWidget):
         direction = (v, h)
 
         if direction != self.prevDir:
-            # print("setting cursor", self)
             self.setCursor(ScaleableWindowFrame.directionCursor[(v, h)])
             self.prevDir = direction
         a0.accept()
@@ -369,7 +368,9 @@ class Note(Ui_Note, ScaleableWindowFrame):
         if self.sizeAdjustTimer > 0:
             self.sizeAdjustTimer -= 1
         elif self.sizeAdjustTimer > -999:
-            self.preview.document().adjustSize()
+            if self.preview.document().idealWidth()>= self.preview.width():
+                self.preview.document().adjustSize()
+            
             self.sizeAdjustTimer = -1000
             
     def resizeEvent(self, a0) -> None:

@@ -134,6 +134,10 @@ class Ui_Note(object):
 "\n"
 "border:1px solid #000000;\n"
 "}")
+        self.preview.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.preview.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.preview.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
+        self.preview.setSearchPaths([])
         self.preview.setOpenExternalLinks(True)
         self.preview.setObjectName("preview")
         self.verticalLayout_2.addWidget(self.preview)

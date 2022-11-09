@@ -310,6 +310,18 @@ border:1px solid #000000;
 border:1px solid #000000;
 }</string>
          </property>
+         <property name="verticalScrollBarPolicy">
+          <enum>Qt::ScrollBarAlwaysOff</enum>
+         </property>
+         <property name="horizontalScrollBarPolicy">
+          <enum>Qt::ScrollBarAlwaysOff</enum>
+         </property>
+         <property name="sizeAdjustPolicy">
+          <enum>QAbstractScrollArea::AdjustIgnored</enum>
+         </property>
+         <property name="searchPaths">
+          <stringlist notr="true"/>
+         </property>
          <property name="openExternalLinks">
           <bool>true</bool>
          </property>
