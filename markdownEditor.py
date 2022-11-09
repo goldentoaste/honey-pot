@@ -62,9 +62,11 @@ class MarkdownPreview(QTextBrowser):
             markdown = mdCodeBlockRegex.sub(f'<pre style="background-color:#292828;color:#d4be98">\n<p1 style="font-size: 12px;">\n\n\u200b{block}\u200c\n</p1></pre>', markdown, 1)
         print("code block processing took", time() - t0)
         "========================================================"
-        # print(markdown)
+
+        t0 = time()
         super().setMarkdown(markdown)
-        # print(self.toHtml())
+        print(f"setting markdown took: {time() - t0}")
+
 
         # loading images
         "========================================================"
@@ -75,12 +77,9 @@ class MarkdownPreview(QTextBrowser):
                 self.document().addResource(2, QUrl(link), image)
         "========================================================"
         
-        # adjust size of contents
-        self.document().adjustSize()
-        self.resize(QSize(self.width() + 1, self.height() + 1))
-        self.resize(QSize(self.width() - 1, self.height() - 1))
-
-
+        # # adjust size of contents
+        # self.document().adjustSize()
+  
 class MarkdownEditor(QTextEdit):
     """
     class used to inject markdown behaviour into a QTextEdit

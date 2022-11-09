@@ -41,22 +41,27 @@ class AbstractParser:
     def __init__(self, parser: QSyntaxHighlighter) -> None:
         self.parser = parser
         
+        self.currentBlock = self.parser.currentBlock
+        self.setCurrentBlockState = self.parser.setCurrentBlockState
+        self.currentBlockState=  self.parser.currentBlockState
+        self.previousBlockState = self.parser.previousBlockState
+        self.setFormat = self.parser.setFormat
 
     def highlightBlock(self, text:str):
         pass
 
         
-    def currentBlock(self):
-        return self.parser.currentBlock()
+    # def currentBlock(self):
+    #     return self.parser.currentBlock()
     
-    def setCurrentBlockState(self, state:int):
-        self.parser.setCurrentBlockState(state)
+    # def setCurrentBlockState(self, state:int):
+    #     self.parser.setCurrentBlockState(state)
     
-    def currentBlockState(self):
-        return self.parser.currentBlockState()
+    # def currentBlockState(self):
+    #     return self.parser.currentBlockState()
     
-    def previousBlockState(self):
-        return self.parser.previousBlockState()
+    # def previousBlockState(self):
+    #     return self.parser.previousBlockState()
     
-    def setFormat(self, start:int, end:int, format: QTextCharFormat):
-        self.parser.setFormat(start, end, format)
+    # def setFormat(self, start:int, end:int, format: QTextCharFormat):
+    #     self.parser.setFormat(start, end, format)

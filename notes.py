@@ -246,6 +246,7 @@ class Note(Ui_Note, ScaleableWindowFrame):
         self.savingDone = True  # used as a lock for the async saving function
         self.previewScroll = 0
         self.updateThread: NoteUpdateThread = None
+        self.sizeAdjustTimer = - 1
 
         self.startEditing()
 
@@ -350,6 +351,9 @@ class Note(Ui_Note, ScaleableWindowFrame):
     def updatePreview(self):
 
         if self.editing and self.needUpdate:
+            
+            self.sizeAdjustTimer = 2
+            
             t0 = time()
             self.previewScroll = self.preview.verticalScrollBar().value()
             self.markdown = self.editor.toPlainText()
@@ -361,19 +365,16 @@ class Note(Ui_Note, ScaleableWindowFrame):
  
             self.saveContent()
             print(f"update took {time()-t0}")
+        
+        if self.sizeAdjustTimer > 0:
+            self.sizeAdjustTimer -= 1
+        elif self.sizeAdjustTimer > -999:
+            self.preview.document().adjustSize()
+            self.sizeAdjustTimer = -1000
             
-        # t1 = time()
-        # doc = self.preview.document()
+    def resizeEvent(self, a0) -> None:
         
-        # if doc.idealWidth() > self.preview.width():
-        #     doc.adjustSize()
-        #     print(f"adjusting size, {doc.idealWidth()}, { self.preview.width()}")
-        # print(f"total update {time() - t1}")
-        
-       
-        # self.textDocument.adjustSize()
-        # if self.textDocument.size().width() < self.preview.width():
-        #     self.textDocument.setTextWidth(self.preview.width() - 15)
+        self.sizeAdjustTimer = 1
 
     def startEditing(self):
 
@@ -384,7 +385,7 @@ class Note(Ui_Note, ScaleableWindowFrame):
         self.editing = True
 
     def stopEditing(self):
-        self.updateThread.stop()
+        # self.updateThread.stop()
         self.editing = False
 
     def closeEvent(self, evt) -> bool:
