@@ -33,7 +33,6 @@ pythonKeywords = [
     "in",
     "lambda",
     "nonlocal",
-    "not",
     "pass",
     "raise",
     "return",
@@ -67,8 +66,9 @@ pythonOperators = [
     "~",
 ]
 
-pythonOpRegex = QRegularExpression(f"(and|or|not|is|<|>|=|!|\+|-|\/|\*|^|%|\/\/|&|~)")
+pythonOpRegex = QRegularExpression(f"((\sand\s)|(\sor\s)|(\snot\s)|(\sis\s)|<|>|=|!|\+|-|\/|\*|^|%|\/\/|&|~)")
 print(f"\\b({'|'.join(pythonOperators)})\\b")
+
 
 
 pythonBuiltins = [
@@ -106,7 +106,7 @@ pythonBuiltinRegex = QRegularExpression(
 )
 
 
-pythonNumberics = QRegularExpression("[1-9_.]+")
+pythonNumberics = QRegularExpression("\\b[1-9_.]+\\b")
 
 
 class SyntaxColor:
@@ -182,7 +182,6 @@ class PythonParser(AbstractParser):
         ]
 
     def highlightBlock(self, text: str):
-        
         importMatchs = self.importregex.globalMatch(text)
         
         while importMatchs.hasNext():
@@ -239,6 +238,3 @@ class PythonParser(AbstractParser):
                 end:QRegularExpressionMatch = matchlist[1]
                 self.setFormat(start.capturedStart(), end.capturedEnd() - start.capturedStart(), self.string)
             
-                
-        
-        

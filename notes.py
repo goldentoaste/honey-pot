@@ -236,7 +236,7 @@ class Note(Ui_Note, ScaleableWindowFrame):
             with open(filePath, "r", encoding="utf8") as f:
                 self.markdown = f.read()
 
-        self.preview.setMarkdown(self.markdown)
+        
         self.editor.setPlainText(self.markdown)
         # self.fixImage()
 
@@ -252,6 +252,10 @@ class Note(Ui_Note, ScaleableWindowFrame):
         self.setupStyles()
         self.setupEvents()
         
+        self.preview.setReadOnly(True)
+        self.preview.setUndoRedoEnabled(False)
+        self.preview.setAcceptRichText(False)
+
     
 
     def setupEvents(self):
@@ -344,22 +348,28 @@ class Note(Ui_Note, ScaleableWindowFrame):
         self.show()
 
     def updatePreview(self):
+
         if self.editing and self.needUpdate:
             t0 = time()
             self.previewScroll = self.preview.verticalScrollBar().value()
             self.markdown = self.editor.toPlainText()
             self.preview.setMarkdown(self.markdown)
-            # self.preview.setMarkdown(self.markdown)
-            
+            # self.preview.document().adjustSize()
             # self.fixImage()
             self.needUpdate = False
             self.preview.verticalScrollBar().setValue(self.previewScroll)
+ 
             self.saveContent()
             print(f"update took {time()-t0}")
-        doc = self.preview.document()
-
-        if doc.idealWidth() >= self.preview.width():
-            doc.adjustSize()
+            
+        # t1 = time()
+        # doc = self.preview.document()
+        
+        # if doc.idealWidth() > self.preview.width():
+        #     doc.adjustSize()
+        #     print(f"adjusting size, {doc.idealWidth()}, { self.preview.width()}")
+        # print(f"total update {time() - t1}")
+        
        
         # self.textDocument.adjustSize()
         # if self.textDocument.size().width() < self.preview.width():
