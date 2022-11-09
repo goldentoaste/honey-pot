@@ -22,3 +22,5 @@ def stuff():
 	+ but if you do, at least write a try except.  
 
 *thats all for now!*
+
+![pasted image](D:\PythonProject\stickyMarkdown\testCache\e55fedfe21059feedc1511f31c41dbd2.jpg)
