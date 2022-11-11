@@ -17,8 +17,8 @@ from utils import getResource
 user32 = ctypes.windll.user32
 
 updateInterval = 1
-ignoreMargin = 8
-dragMargin = 8
+ignoreMargin = 10
+dragMargin = 10
 
 top = 0
 bot = 1
@@ -69,37 +69,57 @@ class ScaleableWindowFrame(QWidget):
         a0.accept()
 
     def handleDrag(self, a0: QMouseEvent):
-        if not self.lastPos:
+        if not self.lastPos or not self.prevDir:
             return
         diff = a0.globalPos() - self.lastPos
 
         dx = diff.x()
         dy = diff.y()
+        
+        
+        if self.prevDir[0] == top:
+            if self.height() - dy < self.minimumHeight():
+                dy = 0
+        
+        if self.prevDir[1] == left:
+            if self.width() - dx < self.minimumWidth():
+                dx = 0
 
         methods = {
             (top, left): lambda: (
-                self.setGeometry(QRect(self.pos() + QPoint(dx, dy),
-                                 self.size().grownBy(QMargins(0, 0, -dx, -dy))))
+                self.setGeometry(
+                    QRect(self.pos() + QPoint(dx, dy), self.size().grownBy(QMargins(0, 0, -dx, -dy)))
+                )
             ),
             (top, None): lambda: (
                 self.setGeometry(
-                    QRect(self.pos() + QPoint(0, dy), self.size().grownBy(QMargins(0, 0, 0, -dy))))
+                    QRect(self.pos() + QPoint(0, dy), self.size().grownBy(QMargins(0, 0, 0, -dy)))
+                )
             ),
             (top, right): lambda: (
-                self.setGeometry(QRect(self.pos() + QPoint(0, dy),
-                                 self.size().grownBy(QMargins(0, 0, dx, -dy))))
+                self.setGeometry(
+                    QRect(self.pos() + QPoint(0, dy), self.size().grownBy(QMargins(0, 0, dx, -dy)))
+                )
             ),
             (None, left): lambda: (
                 self.setGeometry(
-                    QRect(self.pos() + QPoint(dx, 0), self.size().grownBy(QMargins(0, 0, -dx, 0))))
+                    QRect(self.pos() + QPoint(dx, 0), self.size().grownBy(QMargins(0, 0, -dx, 0)))
+                )
             ),
-            (None, right): lambda: (self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, dx, 0))))),
+            (None, right): lambda: (
+                self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, dx, 0))))
+            ),
             (bot, left): lambda: (
-                self.setGeometry(QRect(self.pos() + QPoint(dx, 0),
-                                 self.size().grownBy(QMargins(0, 0, -dx, dy))))
+                self.setGeometry(
+                    QRect(self.pos() + QPoint(dx, 0), self.size().grownBy(QMargins(0, 0, -dx, dy)))
+                )
             ),
-            (bot, None): lambda: (self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, 0, dy))))),
-            (bot, right): lambda: (self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, dx, dy))))),
+            (bot, None): lambda: (
+                self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, 0, dy))))
+            ),
+            (bot, right): lambda: (
+                self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, dx, dy))))
+            ),
             (None, None): lambda: (),
         }
 
@@ -109,34 +129,34 @@ class ScaleableWindowFrame(QWidget):
 
     def handleHover(self, a0: QMouseEvent):
 
-        print('in hover')
-
         # first determine which edge the mouse cursor is on
-        p = a0.pos()
+        x = a0.globalX() - self.x()
+        y = a0.globalY() - self.y()
+
         # vertical direction
-        if p.y() < dragMargin:
+        if y < dragMargin:
             v = top
-        elif self.height() - p.y() < dragMargin:
+        elif self.height() - y < dragMargin:
             v = bot
         else:
             v = None
         # horizontal direction
-        if p.x() <= dragMargin:
+        if x <= dragMargin:
             h = left
-        elif self.width() - p.x() < dragMargin:
+        elif self.width() - x < dragMargin:
             h = right
         else:
             h = None
 
         direction = (v, h)
 
-        if direction != self.prevDir:
+        if True or direction != self.prevDir:
             self.setCursor(ScaleableWindowFrame.directionCursor[(v, h)])
             self.prevDir = direction
         a0.accept()
 
 
-def ignoreEdgeDrag(target: QWidget, parent: QWidget, borderSize: int):
+def ignoreEdgeDrag(target: QWidget, parent: ScaleableWindowFrame, borderSize: int):
 
     oldPressEvent = target.mousePressEvent
     oldMoveEvent = target.mouseMoveEvent
@@ -150,13 +170,11 @@ def ignoreEdgeDrag(target: QWidget, parent: QWidget, borderSize: int):
         # false for press event
         def replacementEvent(event: QMouseEvent):
             # FIXME maybe split this to 3 functions instead
-            print(
-                "in replace", target, target.hasMouseTracking(),
-            )
 
             if eventType == "release":
                 if target.ignoring:
                     target.ignoring = False
+                    parent.frame.ignoring = False
                     event.ignore()
                     return
 
@@ -176,21 +194,13 @@ def ignoreEdgeDrag(target: QWidget, parent: QWidget, borderSize: int):
             dy = mY - pY0
             # within margin
 
-            print(
-                dx,
-                dy,
-                all((dx >= 0, dy >= 0, dx <= parent.width(), dy <= parent.height())),
-                any((dx <= borderSize, dy <= borderSize, pX1 -
-                    mX < borderSize, pY1 - mY < borderSize)),
-            )
-
             if all((dx >= 0, dy >= 0, dx <= parent.width(), dy <= parent.height())) and any(
-                (dx <= borderSize, dy <= borderSize, pX1 -
-                 mX < borderSize, pY1 - mY < borderSize)
+                (dx <= borderSize, dy <= borderSize, pX1 - mX < borderSize, pY1 - mY < borderSize)
             ):
                 event.ignore()
                 if eventType == "press":
                     target.ignoring = True
+                    parent.frame.ignoring = True
 
                 if eventType == "press":
                     return parent.mousePressEvent(event)
@@ -198,6 +208,8 @@ def ignoreEdgeDrag(target: QWidget, parent: QWidget, borderSize: int):
                     return parent.mouseMoveEvent(event)
                 else:
                     return parent.mouseReleaseEvent(event)
+
+            parent.setCursor(Qt.CursorShape.ArrowCursor)
 
             if eventType == "press":
                 return oldPressEvent(event)
@@ -217,12 +229,16 @@ def ignoreHover(ob: QWidget) -> QWidget:
     ob.setMouseTracking(True)
     evt = ob.mouseMoveEvent
     # ob.mouseMoveEvent = lambda a0: a0.ignore()
-    ob.mouseMoveEvent = lambda a0: (
-        a0.ignore() if a0.buttons() == Qt.MouseButton.NoButton else evt(a0))
+    ob.mouseMoveEvent = lambda a0: (a0.ignore() if a0.buttons() == Qt.MouseButton.NoButton else evt(a0))
 
 
 class Note(Ui_Note, ScaleableWindowFrame):
-    def __init__(self, filePath: str, cacheManager: CacheManager, markdown: str = None,) -> None:
+    def __init__(
+        self,
+        filePath: str,
+        cacheManager: CacheManager,
+        markdown: str = None,
+    ) -> None:
         super().__init__()
         self.setupUi(self)
         self.cacheManager = cacheManager
@@ -260,11 +276,9 @@ class Note(Ui_Note, ScaleableWindowFrame):
 
     def setupEvents(self):
         self.setMouseTracking(True)
-        self.editor.textChanged.connect(
-            lambda: setattr(self, "needUpdate", True))
+        self.editor.textChanged.connect(lambda: setattr(self, "needUpdate", True))
         self.closeButton.clicked.connect(self.close)
-        self.minimizeButton.clicked.connect(
-            lambda: self.setWindowState(Qt.WindowState.WindowMinimized))
+        self.minimizeButton.clicked.connect(lambda: self.setWindowState(Qt.WindowState.WindowMinimized))
         makeFrameDraggable(self.frame)
         ignoreEdgeDrag(self.frame, self, ignoreMargin)
         ignoreEdgeDrag(self.pinButton, self, ignoreMargin)
@@ -273,7 +287,8 @@ class Note(Ui_Note, ScaleableWindowFrame):
         ignoreEdgeDrag(self.minimizeButton, self, ignoreMargin)
         ignoreEdgeDrag(self.closeButton, self, ignoreMargin)
         ignoreEdgeDrag(self.frame_2, self, ignoreMargin)
-
+        ignoreEdgeDrag(self.editLabel, self, ignoreMargin)
+        ignoreEdgeDrag(self.previewLabel, self, ignoreMargin)
         # x = (ignoreHover(item) for item in (self.pinButton, self.newNoteButton, self.editButton, self.minimizeButton, self.closeButton, self.frame))
 
     def setupStyles(self):
@@ -300,8 +315,7 @@ class Note(Ui_Note, ScaleableWindowFrame):
         self.pinButton.setIcon(self.pinIcon)
         self.newNoteButton.setIcon(QIcon(QPixmap(getResource("GUI\\add.svg"))))
         self.editButton.setIcon(QIcon(QPixmap(getResource("GUI\\edit.svg"))))
-        self.minimizeButton.setIcon(
-            QIcon(QPixmap(getResource("GUI\\minimize.svg"))))
+        self.minimizeButton.setIcon(QIcon(QPixmap(getResource("GUI\\minimize.svg"))))
         self.closeButton.setIcon(QIcon(QPixmap(getResource("GUI\\close.svg"))))
 
         self.pinButton.clicked.connect(self.togglePin)
@@ -402,7 +416,6 @@ class Note(Ui_Note, ScaleableWindowFrame):
         already local images are ignored.
         """
         doc = self.preview.document()
-        cursor = self.preview.textCursor()
 
         block = doc.begin()
 
@@ -427,10 +440,18 @@ class Note(Ui_Note, ScaleableWindowFrame):
                                     r"D:\PythonProject\stickyMarkdown\testCache\2e53f07491fb7dc99e3aa8d9c9b4c8a9.png"
                                 ),
                             )
-                            print(self.preview.document().resource(
-                                2, QUrl(imagePath),))
-                            print(self.preview.document().resource(
-                                2, QUrl("stufgf"),))
+                            print(
+                                self.preview.document().resource(
+                                    2,
+                                    QUrl(imagePath),
+                                )
+                            )
+                            print(
+                                self.preview.document().resource(
+                                    2,
+                                    QUrl("stufgf"),
+                                )
+                            )
                             # self.preview.loadResource(2, QUrl(cachedWebFile))
                             # self.preview.viewport().update()
                             # cursor.setPosition(fragment.position(), QTextCursor.MoveAnchor)
@@ -497,8 +518,9 @@ if __name__ == "__main__":
     # apply_stylesheet(app, theme='GUI/colors.xml')
 
     n = Note(
-        r"D:\PythonProject\stickyMarkdown\test.md", CacheManager(
-            r"D:\PythonProject\stickyMarkdown\testCache", 5), "",
+        r"D:\PythonProject\stickyMarkdown\test.md",
+        CacheManager(r"D:\PythonProject\stickyMarkdown\testCache", 5),
+        "",
     )
 
     # with open("test.md", "r", encoding="utf8") as f:

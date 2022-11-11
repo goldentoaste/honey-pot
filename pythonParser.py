@@ -67,9 +67,6 @@ pythonOperators = [
 ]
 
 pythonOpRegex = QRegularExpression(f"((\sand\s)|(\sor\s)|(\snot\s)|(\sis\s)|<|>|=|!|\+|-|\/|\*|^|%|\/\/|&|~)")
-print(f"\\b({'|'.join(pythonOperators)})\\b")
-
-
 
 pythonBuiltins = [
     "int",
