@@ -3,7 +3,7 @@
 
 ### Nov.8th 2022
 * write javascript parser (maybe not type script:?)
-* fix bugs regarding window edge drag to scale
+* fix bugs regarding window edge drag to scale (current task)
 * hide scroll sliders, and implement custom scroll slider that are 
     - opaque when mouse hovered on it
     - semi transparent when mouse is in window

@@ -1,7 +1,7 @@
 ## How to code python 101
 ---
 here we go now!
-```py
+```
 # here are some python code
 from os import path
 import requests
@@ -21,6 +21,6 @@ def stuff():
 * remeber to never let i go out of bound!
 	+ but if you do, at least write a try except.  
 
-*thats all for now!*
+*thats all for now!!*
 
-![pasted image](D:\PythonProject\stickyMarkdown\testCache\e55fedfe21059feedc1511f31c41dbd2.jpg)
+![pasted image](D:\PythonProject\stickyMarkdown\testCache\9c3a6033a6f43198d1062f293d78853c.jpg)

@@ -1,33 +1,23 @@
+import ctypes
 import os
-from time import time, sleep
-
+from threading import Thread
+from time import sleep, time
 from typing import Dict, Literal, Tuple
 
-from PyQt5.QtCore import QPoint, Qt, QThread, pyqtSignal, QRect, QMargins, QUrl, QSizeF
-from PyQt5.QtGui import (
-    QFont,
-    QFontDatabase,
-    QFontMetrics,
-    QIcon,
-    QImage,
-    QMouseEvent,
-    QPixmap,
-    QTextBlock,
-    QTextDocument
-
-)
+from PyQt5.QtCore import (QEvent, QMargins, QPoint, QRect, QSizeF, Qt, QThread,
+                          QUrl, pyqtSignal)
+from PyQt5.QtGui import (QFont, QFontDatabase, QFontMetrics, QIcon, QImage,
+                         QMouseEvent, QPixmap, QTextBlock, QTextDocument)
 from PyQt5.QtWidgets import QApplication, QFrame, QWidget
 
 from GUI.noteGUI import Ui_Note
 from imageCache import CacheManager
 from utils import getResource
-from threading import Thread
-import ctypes
 
 user32 = ctypes.windll.user32
 
 updateInterval = 1
-ignoreMargin = 12
+ignoreMargin = 8
 dragMargin = 8
 
 top = 0
@@ -71,6 +61,7 @@ class ScaleableWindowFrame(QWidget):
         a0.accept()
 
     def mouseMoveEvent(self, a0: QMouseEvent) -> None:
+
         if a0.buttons() == Qt.MouseButton.NoButton:
             self.handleHover(a0)
         elif a0.buttons() == Qt.MouseButton.LeftButton:
@@ -87,39 +78,28 @@ class ScaleableWindowFrame(QWidget):
 
         methods = {
             (top, left): lambda: (
-                self.setGeometry(
-                    QRect(self.pos() + QPoint(dx, dy), self.size().grownBy(QMargins(0, 0, -dx, -dy)))
-                )
+                self.setGeometry(QRect(self.pos() + QPoint(dx, dy),
+                                 self.size().grownBy(QMargins(0, 0, -dx, -dy))))
             ),
             (top, None): lambda: (
                 self.setGeometry(
-                    QRect(self.pos() + QPoint(0, dy), self.size().grownBy(QMargins(0, 0, 0, -dy)))
-                )
+                    QRect(self.pos() + QPoint(0, dy), self.size().grownBy(QMargins(0, 0, 0, -dy))))
             ),
             (top, right): lambda: (
-                self.setGeometry(
-                    QRect(self.pos() + QPoint(0, dy), self.size().grownBy(QMargins(0, 0, dx, -dy)))
-                )
+                self.setGeometry(QRect(self.pos() + QPoint(0, dy),
+                                 self.size().grownBy(QMargins(0, 0, dx, -dy))))
             ),
             (None, left): lambda: (
                 self.setGeometry(
-                    QRect(self.pos() + QPoint(dx, 0), self.size().grownBy(QMargins(0, 0, -dx, 0)))
-                )
+                    QRect(self.pos() + QPoint(dx, 0), self.size().grownBy(QMargins(0, 0, -dx, 0))))
             ),
-            (None, right): lambda: (
-                self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, dx, 0))))
-            ),
+            (None, right): lambda: (self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, dx, 0))))),
             (bot, left): lambda: (
-                self.setGeometry(
-                    QRect(self.pos() + QPoint(dx, 0), self.size().grownBy(QMargins(0, 0, -dx, dy)))
-                )
+                self.setGeometry(QRect(self.pos() + QPoint(dx, 0),
+                                 self.size().grownBy(QMargins(0, 0, -dx, dy))))
             ),
-            (bot, None): lambda: (
-                self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, 0, dy))))
-            ),
-            (bot, right): lambda: (
-                self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, dx, dy))))
-            ),
+            (bot, None): lambda: (self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, 0, dy))))),
+            (bot, right): lambda: (self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, dx, dy))))),
             (None, None): lambda: (),
         }
 
@@ -128,6 +108,9 @@ class ScaleableWindowFrame(QWidget):
         a0.accept()
 
     def handleHover(self, a0: QMouseEvent):
+
+        print('in hover')
+
         # first determine which edge the mouse cursor is on
         p = a0.pos()
         # vertical direction
@@ -159,18 +142,24 @@ def ignoreEdgeDrag(target: QWidget, parent: QWidget, borderSize: int):
     oldMoveEvent = target.mouseMoveEvent
     oldReleaseEvent = target.mouseReleaseEvent
     target.ignoring = False
-    
+
     target.setMouseTracking(True)
+    target.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
 
     def makeReplacementEvent(eventType: Literal["press", "move", "release"]):
         # false for press event
         def replacementEvent(event: QMouseEvent):
             # FIXME maybe split this to 3 functions instead
+            print(
+                "in replace", target, target.hasMouseTracking(),
+            )
+
             if eventType == "release":
                 if target.ignoring:
                     target.ignoring = False
                     event.ignore()
                     return
+
             if target.ignoring:
                 event.ignore()
                 return
@@ -183,14 +172,32 @@ def ignoreEdgeDrag(target: QWidget, parent: QWidget, borderSize: int):
             pX1 = pX0 + parent.width()
             pY1 = pY0 + parent.height()
 
+            dx = mX - pX0
+            dy = mY - pY0
             # within margin
-            if any(
-                (mX - pX0 <= borderSize, mY - pY0 <= borderSize, pX1 - mX < borderSize, pY1 - mY < borderSize)
+
+            print(
+                dx,
+                dy,
+                all((dx >= 0, dy >= 0, dx <= parent.width(), dy <= parent.height())),
+                any((dx <= borderSize, dy <= borderSize, pX1 -
+                    mX < borderSize, pY1 - mY < borderSize)),
+            )
+
+            if all((dx >= 0, dy >= 0, dx <= parent.width(), dy <= parent.height())) and any(
+                (dx <= borderSize, dy <= borderSize, pX1 -
+                 mX < borderSize, pY1 - mY < borderSize)
             ):
                 event.ignore()
                 if eventType == "press":
                     target.ignoring = True
-                return
+
+                if eventType == "press":
+                    return parent.mousePressEvent(event)
+                elif eventType == "move":
+                    return parent.mouseMoveEvent(event)
+                else:
+                    return parent.mouseReleaseEvent(event)
 
             if eventType == "press":
                 return oldPressEvent(event)
@@ -210,16 +217,12 @@ def ignoreHover(ob: QWidget) -> QWidget:
     ob.setMouseTracking(True)
     evt = ob.mouseMoveEvent
     # ob.mouseMoveEvent = lambda a0: a0.ignore()
-    ob.mouseMoveEvent = lambda a0: (a0.ignore() if a0.buttons() == Qt.MouseButton.NoButton else evt(a0))
+    ob.mouseMoveEvent = lambda a0: (
+        a0.ignore() if a0.buttons() == Qt.MouseButton.NoButton else evt(a0))
 
 
 class Note(Ui_Note, ScaleableWindowFrame):
-    def __init__(
-        self,
-        filePath: str,
-        cacheManager: CacheManager,
-        markdown: str = None,
-    ) -> None:
+    def __init__(self, filePath: str, cacheManager: CacheManager, markdown: str = None,) -> None:
         super().__init__()
         self.setupUi(self)
         self.cacheManager = cacheManager
@@ -235,7 +238,6 @@ class Note(Ui_Note, ScaleableWindowFrame):
             with open(filePath, "r", encoding="utf8") as f:
                 self.markdown = f.read()
 
-        
         self.editor.setPlainText(self.markdown)
         # self.fixImage()
 
@@ -245,24 +247,24 @@ class Note(Ui_Note, ScaleableWindowFrame):
         self.savingDone = True  # used as a lock for the async saving function
         self.previewScroll = 0
         self.updateThread: NoteUpdateThread = None
-        self.sizeAdjustTimer = - 1
+        self.sizeAdjustTimer = -1
 
         self.startEditing()
 
         self.setupStyles()
         self.setupEvents()
-        
+
         self.preview.setReadOnly(True)
         self.preview.setUndoRedoEnabled(False)
         self.preview.setAcceptRichText(False)
 
-    
-
     def setupEvents(self):
         self.setMouseTracking(True)
-        self.editor.textChanged.connect(lambda: setattr(self, "needUpdate", True))
+        self.editor.textChanged.connect(
+            lambda: setattr(self, "needUpdate", True))
         self.closeButton.clicked.connect(self.close)
-        self.minimizeButton.clicked.connect(lambda: self.setWindowState(Qt.WindowState.WindowMinimized))
+        self.minimizeButton.clicked.connect(
+            lambda: self.setWindowState(Qt.WindowState.WindowMinimized))
         makeFrameDraggable(self.frame)
         ignoreEdgeDrag(self.frame, self, ignoreMargin)
         ignoreEdgeDrag(self.pinButton, self, ignoreMargin)
@@ -270,13 +272,10 @@ class Note(Ui_Note, ScaleableWindowFrame):
         ignoreEdgeDrag(self.editButton, self, ignoreMargin)
         ignoreEdgeDrag(self.minimizeButton, self, ignoreMargin)
         ignoreEdgeDrag(self.closeButton, self, ignoreMargin)
-        ignoreEdgeDrag(self.editLabel, self,ignoreMargin)
-        ignoreEdgeDrag(self.previewLabel, self, ignoreMargin)
-        
-        # x = (ignoreHover(item) for item in (self.pinButton, self.newNoteButton, self.editButton, self.minimizeButton, self.closeButton, self.frame))
-    
+        ignoreEdgeDrag(self.frame_2, self, ignoreMargin)
 
-    
+        # x = (ignoreHover(item) for item in (self.pinButton, self.newNoteButton, self.editButton, self.minimizeButton, self.closeButton, self.frame))
+
     def setupStyles(self):
         # fonts stuff
         QFontDatabase.addApplicationFont(r"GUI/Roboto-Regular.ttf")
@@ -301,7 +300,8 @@ class Note(Ui_Note, ScaleableWindowFrame):
         self.pinButton.setIcon(self.pinIcon)
         self.newNoteButton.setIcon(QIcon(QPixmap(getResource("GUI\\add.svg"))))
         self.editButton.setIcon(QIcon(QPixmap(getResource("GUI\\edit.svg"))))
-        self.minimizeButton.setIcon(QIcon(QPixmap(getResource("GUI\\minimize.svg"))))
+        self.minimizeButton.setIcon(
+            QIcon(QPixmap(getResource("GUI\\minimize.svg"))))
         self.closeButton.setIcon(QIcon(QPixmap(getResource("GUI\\close.svg"))))
 
         self.pinButton.clicked.connect(self.togglePin)
@@ -333,7 +333,7 @@ class Note(Ui_Note, ScaleableWindowFrame):
 
         if not self.savingDone:
             return
-        
+
         self.savingThread = Thread(target=save)
         self.savingThread.start()
 
@@ -350,9 +350,9 @@ class Note(Ui_Note, ScaleableWindowFrame):
     def updatePreview(self):
 
         if self.editing and self.needUpdate:
-            
+
             self.sizeAdjustTimer = 2
-            
+
             t0 = time()
             self.previewScroll = self.preview.verticalScrollBar().value()
             self.markdown = self.editor.toPlainText()
@@ -361,20 +361,20 @@ class Note(Ui_Note, ScaleableWindowFrame):
             # self.fixImage()
             self.needUpdate = False
             self.preview.verticalScrollBar().setValue(self.previewScroll)
- 
+
             self.saveContent()
             print(f"update took {time()-t0}")
-        
+
         if self.sizeAdjustTimer > 0:
             self.sizeAdjustTimer -= 1
         elif self.sizeAdjustTimer > -999:
-            if self.preview.document().idealWidth()>= self.preview.width():
+            if self.preview.document().idealWidth() >= self.preview.width():
                 self.preview.document().adjustSize()
-            
+
             self.sizeAdjustTimer = -1000
-            
+
     def resizeEvent(self, a0) -> None:
-        
+
         self.sizeAdjustTimer = 1
 
     def startEditing(self):
@@ -412,7 +412,7 @@ class Note(Ui_Note, ScaleableWindowFrame):
             while not bit.atEnd():
                 fragment = bit.fragment()
                 textFormat = fragment.charFormat()
-  
+
                 if textFormat.isImageFormat():
                     imageFormat = textFormat.toImageFormat()
 
@@ -420,9 +420,17 @@ class Note(Ui_Note, ScaleableWindowFrame):
                     if not os.path.isfile(imagePath):
                         cachedWebFile = self.cacheManager.getFile(imagePath)
                         if cachedWebFile:
-                            self.preview.document().addResource(2, QUrl(imagePath), QImage(r"D:\PythonProject\stickyMarkdown\testCache\2e53f07491fb7dc99e3aa8d9c9b4c8a9.png"))
-                            print(self.preview.document().resource(2, QUrl(imagePath),))
-                            print(self.preview.document().resource(2, QUrl("stufgf"),))
+                            self.preview.document().addResource(
+                                2,
+                                QUrl(imagePath),
+                                QImage(
+                                    r"D:\PythonProject\stickyMarkdown\testCache\2e53f07491fb7dc99e3aa8d9c9b4c8a9.png"
+                                ),
+                            )
+                            print(self.preview.document().resource(
+                                2, QUrl(imagePath),))
+                            print(self.preview.document().resource(
+                                2, QUrl("stufgf"),))
                             # self.preview.loadResource(2, QUrl(cachedWebFile))
                             # self.preview.viewport().update()
                             # cursor.setPosition(fragment.position(), QTextCursor.MoveAnchor)
@@ -447,9 +455,8 @@ def makeFrameDraggable(frame: QFrame):
         if frame.offset:
             frame.parent().move((a0.screenPos() - frame.offset).toPoint())
 
-    def mouseExitEvent(_: QMouseEvent):
-
-        frame.offset = None
+    # def mouseExitEvent(a0: QMouseEvent):
+    #     frame.offset = None
 
     def mouseReleaseEvent(_: QMouseEvent):
         frame.offset = None
@@ -457,7 +464,7 @@ def makeFrameDraggable(frame: QFrame):
     frame.mousePressEvent = mousePressEvent
     frame.mouseMoveEvent = mouseMoveEvent
     frame.mouseReleaseEvent = mouseReleaseEvent
-    frame.leaveEvent = mouseExitEvent
+    # frame.leaveEvent = mouseExitEvent
 
 
 class NoteUpdateThread(QThread):
@@ -490,10 +497,9 @@ if __name__ == "__main__":
     # apply_stylesheet(app, theme='GUI/colors.xml')
 
     n = Note(
-            r"D:\PythonProject\stickyMarkdown\test.md",
-            CacheManager(r"D:\PythonProject\stickyMarkdown\testCache", 5),
-           "",
-        )
+        r"D:\PythonProject\stickyMarkdown\test.md", CacheManager(
+            r"D:\PythonProject\stickyMarkdown\testCache", 5), "",
+    )
 
     # with open("test.md", "r", encoding="utf8") as f:
     #     n = Note(
