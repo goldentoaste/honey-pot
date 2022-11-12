@@ -35,6 +35,16 @@ if __name__ == '__main__':
     print(state)
 
 
+class SyntaxColor:
+    keyWord = QColor("#ea6962")  # like def, return, raise
+    symbol = QColor("#e78a4e")  # +, -, /, ^ etc
+    string = QColor("#d8a657")
+    function = QColor("#a9b665")
+    obj = QColor('#89b482')
+    builtin = QColor("#7daea3")  # builtin or system class
+    numeric = QColor("#d3869b")  # or used for specials, for example import statements
+    comments = QColor("#928374")
+
 
 class AbstractParser:
     
@@ -46,6 +56,42 @@ class AbstractParser:
         self.currentBlockState=  self.parser.currentBlockState
         self.previousBlockState = self.parser.previousBlockState
         self.setFormat = self.parser.setFormat
+        
+        
+        codeFont = QFont("Cascadia Code", 10)
+
+        self.keyword = QTextCharFormat()  # #ea6962
+        self.keyword.setForeground(SyntaxColor.keyWord)
+        self.keyword.setFont(codeFont)
+
+        self.symbol = QTextCharFormat()  # #e78a4e
+        self.symbol.setForeground(SyntaxColor.symbol)
+        self.symbol.setFont(codeFont)
+
+        self.string = QTextCharFormat()  # #d8a657
+        self.string.setForeground(SyntaxColor.string)
+        self.string.setFont(codeFont)
+
+        self.function = QTextCharFormat()  # #a9b665
+        self.function.setForeground(SyntaxColor.function)
+        self.function.setFont(codeFont)
+        
+        self.obj = QTextCharFormat()  # #89b482
+        self.obj.setForeground(SyntaxColor.obj)
+        self.obj.setFont(codeFont)
+
+        self.builtin = QTextCharFormat()  # #7daea3
+        self.builtin.setForeground(SyntaxColor.builtin)
+        self.builtin.setFont(codeFont)
+
+        self.numeric = QTextCharFormat()  # #d3869b
+        self.numeric.setForeground(SyntaxColor.numeric)
+        self.numeric.setFont(codeFont)
+
+        # comments is not supported for markdown, because there is no use case in a sticky note app
+        self.comment = QTextCharFormat()  # #928374
+        self.comment.setForeground(SyntaxColor.comments)
+        self.comment.setFont(codeFont)
 
     def highlightBlock(self, text:str):
         pass

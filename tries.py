@@ -69,39 +69,9 @@ class Trie():
     
     
 if __name__ == '__main__':
-    pythonKeywords = [
-    "False",
-    "None",
-    "True",
-    "as",
-    "assert",
-    "async",
-    "await",
-    "break",
-    "class",
-    "continue",
-    "def",
-    "del",
-    "elif",
-    "else",
-    "except",
-    "finally",
-    "for",
-    "from",
-    "global",
-    "if",
-    "import",
-    "in",
-    "lambda",
-    "nonlocal",
-    "not",
-    "pass",
-    "raise",
-    "return",
-    "try",
-    "while",
-    "with",
-    "yield",
+    pythonKeywords =  [
+"<", ">", "=", "\+", "\*", "&", "\|", "%", "-", "!", "\?", "~", "^", "\/"
+
 ]
     t = Trie()
     

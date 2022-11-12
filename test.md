@@ -1,6 +1,6 @@
 ## How to code python 101
 ---
-here we go now!
+
 ```text
 # here are some python code
 from os import path
@@ -10,7 +10,8 @@ from multiprocessing import ThreadPool
 # first define a function
 def stuff():
 	x = doStuff()
-
+	True
+	
 	for i in range(19):
 		try: 
 			print(x[i])
@@ -22,6 +23,10 @@ class Weeo(object):
 	def __init__(self, arg1, arg2):
 		self.stuff1 = arg1
 		self.stuff2 = arg2
+
+
+######Here are some more testing####
+"sda" not string "sad" not string again'asd'
 ```
 
 * remeber to never let i go out of bound!
