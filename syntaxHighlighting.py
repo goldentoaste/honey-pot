@@ -155,10 +155,10 @@ class EditorHighlighter(QSyntaxHighlighter):
         ]
 
         self.codeBlockStartPattern = QRegularExpression(
-            r"^```((text)|(python)|(py))$", reflags.MultilineOption
+            r"^```(text|python|py)?", reflags.MultilineOption
         )
         self.codeblockLangPattern = QRegularExpression(r"(text)|(python)|(py)")
-        self.codeBlockEndPattern = QRegularExpression(r"```$", reflags.MultilineOption)
+        self.codeBlockEndPattern = QRegularExpression(r"```\s*$", reflags.MultilineOption)
         self.codeStartIndex = 0
 
     def highlightBlock(self, text: str) -> None:
@@ -179,13 +179,18 @@ class EditorHighlighter(QSyntaxHighlighter):
         self.setCurrentBlockState(1)
         startIndex = 0
         matchLength = 0
+        startMatch = None
         # if prevState is not comment
         if self.previousBlockState() % CodeBLockState:
             startMatch = self.codeBlockStartPattern.match(text)
             startIndex = startMatch.capturedStart()
 
         if startIndex >= 0:
-            endMatch = self.codeBlockEndPattern.match(text)
+            if startMatch is not None:
+                offset = startMatch.capturedLength()
+            else:
+                offset = 0
+            endMatch = self.codeBlockEndPattern.match(text, offset)
             endindex = endMatch.capturedStart()
 
             if endindex == -1:

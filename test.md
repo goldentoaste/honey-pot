@@ -1,7 +1,7 @@
 ## How to code python 101
 ---
 here we go now!
-```py
+```text
 # here are some python code
 from os import path
 import requests
