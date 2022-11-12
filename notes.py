@@ -302,7 +302,7 @@ class Note(Ui_Note, ScaleableWindowFrame):
         self.previewFont = font
         self.preview.setFont(self.previewFont)
 
-        self.editorFont = QFont("Cascadia Code", 9, QFont.Weight.Light)
+        self.editorFont = QFont("Cascadia Code", 10, QFont.Weight.Light)
         self.editor.setFont(self.editorFont)
 
         metric = QFontMetrics(self.editorFont)

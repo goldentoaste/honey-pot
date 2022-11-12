@@ -106,6 +106,8 @@ pythonBuiltinRegex = QRegularExpression(
 pythonNumberics = QRegularExpression("\\b[1-9_.]+\\b")
 
 
+pythonClassRegex = QRegularExpression(r"class\s+([\w\s]+)(?:\(([\w\s,.]+)\))?\s*:")
+
 class SyntaxColor:
     keyWord = QColor("#ea6962")  # like def, return, raise
     symbol = QColor("#e78a4e")  # +, -, /, ^ etc
@@ -207,6 +209,11 @@ class PythonParser(AbstractParser):
 
         prefixMatch = self.stringPrefixRegex.match(text)
         self.setFormat(prefixMatch.capturedStart(1), prefixMatch.capturedLength(1), self.builtin) 
+    
+        classMatch = pythonClassRegex.match(text)
+        for i in range(1, len(classMatch.capturedTexts()), 1):
+            self.setFormat(classMatch.capturedStart(i), classMatch.capturedLength(i), self.obj)
+    
     
         # comment overrides all
         commentMatch = self.commentRegex.match(text)
