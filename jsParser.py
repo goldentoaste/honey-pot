@@ -48,7 +48,19 @@ tsKeywords = [
     "keyof",
     "import",
 ]
+'''
+keywords (red)
+varClass (orange)
+types (light blue)
+operators (orange)
+functions (light green)
+singleLineStrings (yellow)
+singleLineComment (gray)
+typeHint (dark green)
+typeDelare (light blue)
+classDeclare (dark green)
 
+'''
 keywordsRegex = QRegularExpression(r"\b((?:as|break|c(?:a(?:se|tch)|lass|ontinue)|do|e(?:lse|num|xport)|f(?:inally|or|unction)|get|i(?:mport|n(?:(?:stanceof|terface))?|f)|keyof|module|new|p(?:ackage|rivate|ublic)|return|s(?:t(?:atic|ring)|uper|witch)|t(?:h(?:is|row)|ry|ypeof)|while|yield))\b")
 
 # to be orange
@@ -71,7 +83,7 @@ operators = ["<", ">", "=", "\+", "\*", "&", "\|", "%", "-", "!", "\?", "~", "^"
 slashBar = "\|"
 operatorsRegex = QRegularExpression(f"\\b{slashBar.join(operators)}\\b")
 
-functionRegex = QRegularExpression("([a-zA-z_]+[a-zA-z_0-9]*)\(")
+functionRegex = QRegularExpression("([a-zA-z_]+[a-zA-z_0-9]*)(?:\(|<)")
 
 stringRegex1 = QRegularExpression(r"\"([^\"])*\"")
 stringRegex2 =QRegularExpression(r"\'([^\'])*\'")
@@ -81,7 +93,68 @@ commentRegex = QRegularExpression("\/\/[\s\S]*$", reflags.MultilineOption)
 multiCommentStartRegex = QRegularExpression("\/\*")
 multiCommentEndRegex = QRegularExpression("\*\/")
 
+typeHintRegex = QRegularExpression(r':([\w\s_0-9]+)(?:[,)\n])')
+typeDeclareRegex = QRegularExpression(r"(?:type|enum)\s+(\w+)")
+classDelareRegex = QRegularExpression(r"(?:class)\s+(\w+)")
+
+
+
 
 class JsParser(AbstractParser):
     def __init__(self, parser: QSyntaxHighlighter) -> None:
         super().__init__(parser)
+
+
+    def highlightBlock(self, text: str):
+        
+        keywordsMatches = keywordsRegex.globalMatch(text)
+        while keywordsMatches.hasNext():
+            match = keywordsMatches.next()
+            self.setFormat(match.capturedStart(), match.capturedLength(), self.keyword)
+        
+        varClassMatches = varClassRegex.globalMatch(text)
+        while varClassMatches.hasNext():
+            match = varClassMatches.next()
+            self.setFormat(match.capturedStart(), match.capturedLength(), self.symbol)
+        
+        typeMatches = typesRegex.globalMatch(text)
+        while typeMatches.hasNext():
+            match = typeMatches.next()
+            self.setFormat(match.capturedStart(), match. capturedLength(),  self.builtin)
+        
+        operatorsMatches = operatorsRegex.globalMatch(text)
+        while operatorsMatches.hasNext():
+            match = operatorsMatches.next()
+            self.setFormat(match.capturedStart(), match.capturedLength(), self.symbol )
+        
+        functionMatchs = functionRegex.globalMatch(text)
+        while functionMatchs.hasNext():
+            match = functionMatchs.next()
+            self.setFormat(match.capturedStart(1), match.capturedLength(1), self.function)
+        
+        stringMatchs = stringRegex1.globalMatch(text)
+        while stringMatchs.hasNext():
+            match = stringMatchs.next()
+            self.setFormat(match.capturedStart(), match.capturedLength(), self.string)
+        stringMatchs = stringRegex2.globalMatch(text)
+        while stringMatchs.hasNext():
+            match = stringMatchs.next()
+            self.setFormat(match.capturedStart(), match.capturedLength(), self.string)
+        
+        commentMatch = commentRegex.match(text)
+        if commentMatch.capturedStart() >= 0:
+            self.setFormat(commentMatch.capturedStart(), len(text)-commentMatch.capturedStart(), self.comment)
+        
+        typeHints = typeHintRegex.globalMatch(text)
+        while typeHints.hasNext():
+            match =typeHints.next()
+            self.setFormat(match.capturedStart( 1), match.capturedLength(1), self.obj)
+        
+        typeDeclareMatch = typeDeclareRegex.match(text)
+        if typeDeclareMatch.capturedStart() >= 0:
+            self.setFormat(typeDeclareMatch.capturedStart(1), typeDeclareMatch.capturedLength(1), self.obj)\
+                
+        
+            
+        
+        

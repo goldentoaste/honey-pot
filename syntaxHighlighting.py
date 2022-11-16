@@ -7,9 +7,10 @@ from PyQt5.QtCore import (QRegularExpression, QRegularExpressionMatch,
 from PyQt5.QtGui import (QColor, QFont, QSyntaxHighlighter, QTextCharFormat,
                          QTextDocument)
 
-from codeparser import (addToState, emptyState, pythonState, removeState,
+from codeparser import (addToState, emptyState, pythonState, removeState,jsState,
                         stateContains)
 from pythonParser import PythonParser
+from jsParser import JsParser
 
 reflags = QRegularExpression.PatternOption
 
@@ -38,10 +39,10 @@ class PreviewHighlighter(QSyntaxHighlighter):
         self.blockLangs: List[Languages] = []
         self.blockLengths: List[Tuple[int, int]] = []  # Tuple[Start, EndIndex]
 
-        self.codeBlockSep = "\u200B"  # a zero width space to mark beginning and end of code blocks
 
-        self.pythonStart = QRegularExpression("^\\x{200b}", reflags.MultilineOption)
-        self.jsStart = QRegularExpression("^\u200b\u200b", reflags.MultilineOption)
+        
+        self.pythonStart = QRegularExpression("^\\x{200b}\\x{200b}(?!\\x{200b})", reflags.MultilineOption)
+        self.jsStart = QRegularExpression("^\\x{200b}\\x{200b}\\x{200b}", reflags.MultilineOption)
         self.codeEndPattern = QRegularExpression("\\x{200c}$", reflags.MultilineOption)
 
         self.startIndex = 0
@@ -50,6 +51,7 @@ class PreviewHighlighter(QSyntaxHighlighter):
         self.offset = 0
 
         self.pythonParser = PythonParser(self)
+        self.jsParser = JsParser(self)
 
     def reset(self):
 
@@ -65,14 +67,33 @@ class PreviewHighlighter(QSyntaxHighlighter):
         self.matchLength = 0
 
     def highlightBlock(self, text: str) -> None:
-        startMatch= self.pythonStart.match(text)
-        endMatch = self.codeEndPattern.match(text)
-        
+        self.checkPython(text)
+        self.checkJS(text)
+    
+    
+    def checkJS(self, text:str):
+        if stateContains(self.previousBlockState(), jsState):
+            endMatch = self.codeEndPattern.match(text)
+            self.jsParser.highlightBlock(text)
+            if endMatch.capturedStart() < 0:
+                self.setCurrentBlockState(addToState(self.currentBlockState(), jsState))
+        else:
+            startMatch= self.jsStart.match(text)
+            endMatch = self.codeEndPattern.match(text)
+            if startMatch.capturedStart() >= 0:
+                self.jsParser.highlightBlock(text)
+                if  endMatch.capturedStart() < 0:
+                    self.setCurrentBlockState(addToState(self.currentBlockState(), jsState))
+    
+    def checkPython(self, text:str):
         if stateContains(self.previousBlockState(), pythonState):
+            endMatch = self.codeEndPattern.match(text)
             self.pythonParser.highlightBlock(text)
             if endMatch.capturedStart() < 0:
                 self.setCurrentBlockState(addToState(self.currentBlockState(), pythonState))
         else:
+            startMatch= self.pythonStart.match(text)
+            endMatch = self.codeEndPattern.match(text)
             if startMatch.capturedStart() >= 0:
                 self.pythonParser.highlightBlock(text)
                 if  endMatch.capturedStart() < 0:
@@ -155,9 +176,9 @@ class EditorHighlighter(QSyntaxHighlighter):
         ]
 
         self.codeBlockStartPattern = QRegularExpression(
-            r"^```(text|python|py)?", reflags.MultilineOption
+            r"^```", reflags.MultilineOption
         )
-        self.codeblockLangPattern = QRegularExpression(r"(text)|(python)|(py)")
+        self.codeblockLangPattern = QRegularExpression(r"txt|text|python|py|js|javascript|ts|typescipt")
         self.codeBlockEndPattern = QRegularExpression(r"```\s*$", reflags.MultilineOption)
         self.codeStartIndex = 0
 

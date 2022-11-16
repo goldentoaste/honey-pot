@@ -315,6 +315,7 @@ class Callbacks {
 	}
 
 	setCallbacks(hook: Hook, callbacks: Callback[]): void {
+	
 		this.callbacks.set(hook, callbacks);
 		this.sequentialRunners.set(hook, this.createSequentialRunner(hook, callbacks));
 		this.asyncRunners.set(hook, this.createAsyncRunner(hook, callbacks));
@@ -380,6 +381,14 @@ class Callbacks {
 		this.setCallbacks(hook, hooks);
 	}
 
+	const s = `
+	
+	asdas
+	
+	asdasd
+	as
+	`
+
 	/**
 	 * Successively run all of a hook's callbacks on an item
 	 *
@@ -423,5 +432,8 @@ class Callbacks {
  * @deprecated
  */
 
-print('asd')
+
+class stuff{
+	@Event
+}
 export const callbacks = new Callbacks();

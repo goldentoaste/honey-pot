@@ -1,20 +1,19 @@
+import html
 import os
+import textwrap
 from hashlib import md5
 from os import path
 from random import randint
 from time import time
 from typing import List
 
-
-from PyQt5.QtCore import QMimeData, QUrl, pyqtSignal, QSize
+from PyQt5.QtCore import QMimeData, QSize, QUrl, pyqtSignal
 from PyQt5.QtGui import QImage
 from PyQt5.QtWidgets import QTextBrowser, QTextEdit
 
 from imageCache import CacheManager
-from utils import cacheLocation, mdImageRegex, mdCodeBlockRegex
-import textwrap
-import html
 from syntaxHighlighting import EditorHighlighter, Languages, PreviewHighlighter
+from utils import cacheLocation, mdCodeBlockRegex, mdImageRegex
 
 copyCommand = "copy" if os.name == "nt" else "cp"  # copy for windows, cp for unix systems
 backSlash = "\\"
@@ -36,15 +35,22 @@ class MarkdownPreview(QTextBrowser):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.cache = CacheManager(r"D:\PythonProject\stickyMarkdown\testCache", 5)
-        self.blockTypes = [] #python, text, etc
+        self.blockTypes = []  # python, text, etc
         self.allBlockTypes = {
-            'python': Languages.python,
-            'py': Languages.python,
-            'js': Languages.javascript,
-            'javascript': Languages.javascript,
-            'text': Languages.text,
-            'txt': Languages.text
+            "python": Languages.python,
+            "py": Languages.python,
+            "js": Languages.javascript,
+            "javascript": Languages.javascript,
+            "text": Languages.text,
+            "txt": Languages.text,
         }
+
+        self.langHeaderMap = {
+            Languages.text: "\u200b",
+            Languages.python: "\u200b\u200b",
+            Languages.javascript: "\u200b\u200b\u200b",
+        }
+
         self.highlighter = PreviewHighlighter(self.document())
 
     def setMarkdown(self, markdown: str) -> None:
@@ -53,20 +59,24 @@ class MarkdownPreview(QTextBrowser):
         t0 = time()
         self.blockTypes.clear()
         codeBlocks = mdCodeBlockRegex.findall(markdown)
-        block : str
+        block: str
         for block in codeBlocks:
-            langHeader = block[:block.find("\n")]
-            self.blockTypes.append(self.allBlockTypes.get(langHeader, Languages.none))
-            block = block[block.find('\n')+1:]
+            langHeader = block[: block.find("\n")]
+            langType = self.allBlockTypes.get(langHeader, Languages.text)
+            block = block[block.find("\n") + 1 :]
             block = textwrap.indent(html.escape(block).strip("\n").replace("\\", "\\\\"), "    ")
-            markdown = mdCodeBlockRegex.sub(f'<pre style="background-color:#292828;color:#d4be98">\n<p1 style="font-size: 12px;">\n\n\u200b{block}\u200c\n</p1></pre>', markdown, 1)
+            print(self.langHeaderMap[langType].encode("utf8"))
+            markdown = mdCodeBlockRegex.sub(
+                f'<pre style="background-color:#292828;color:#d4be98">\n<p1 style="font-size: 12px;">\n\n{self.langHeaderMap[langType]}{block}\u200c\n</p1></pre>',
+                markdown,
+                1,
+            )
         print("code block processing took", time() - t0)
         "========================================================"
 
         t0 = time()
         super().setMarkdown(markdown)
         print(f"setting markdown took: {time() - t0}")
-
 
         # loading images
         "========================================================"
@@ -76,10 +86,11 @@ class MarkdownPreview(QTextBrowser):
             if cachedFile:
                 self.document().addResource(2, QUrl(link), image)
         "========================================================"
-        
+
         # # adjust size of contents
         # self.document().adjustSize()
-  
+
+
 class MarkdownEditor(QTextEdit):
     """
     class used to inject markdown behaviour into a QTextEdit
@@ -91,7 +102,7 @@ class MarkdownEditor(QTextEdit):
         super().__init__(*args, **kwargs)
         self.setAcceptRichText(False)
         self.highlighter = EditorHighlighter(self.document())
-    
+
     def canInsertFromMimeData(self, source: QMimeData) -> bool:
         return super().canInsertFromMimeData(source)
 
@@ -111,7 +122,9 @@ class MarkdownEditor(QTextEdit):
             if not imagedata:
                 return
 
-            imagePath = path.join(cacheLocation, md5(f"{time()}{randint(0, 999)}".encode("ascii")).hexdigest() + ".jpg")
+            imagePath = path.join(
+                cacheLocation, md5(f"{time()}{randint(0, 999)}".encode("ascii")).hexdigest() + ".jpg"
+            )
             imagedata.save(imagePath, "JPG", 85)
             self.fileAddedSignal.emit(imagePath)
             return self.insertPlainText(f"![pasted image]({imagePath})")
