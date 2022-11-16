@@ -2,7 +2,15 @@
 ---
 
 ```javascript
-// lets do some 
+// lets do some javascript!
+
+const func = (var1:string, var2) => {
+	return stuff;
+	
+	for (int i=0; i < 100; i++){
+		console.log("jsjsjsjsjsjs");
+	}
+}
 ```
 
 * remeber to never let i go out of bound!
