@@ -1,8 +1,8 @@
 import datetime
 import os
 
-import PyQt5.QtGui as QtGui
-from PyQt5.QtWidgets import QWidget
+import PySide6.QtGui as QtGui
+from PySide6.QtWidgets import QWidget
 
 from GUI.notePreviewGUI import Ui_NotePreview
 

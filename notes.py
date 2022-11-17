@@ -4,11 +4,11 @@ from threading import Thread
 from time import sleep, time
 from typing import Dict, Literal, Tuple
 
-from PyQt5.QtCore import (QEvent, QMargins, QPoint, QRect, QSizeF, Qt, QThread,
-                          QUrl, pyqtSignal)
-from PyQt5.QtGui import (QFont, QFontDatabase, QFontMetrics, QIcon, QImage,
+from PySide6.QtCore import (QEvent, QMargins, QPoint, QRect, QSizeF, Qt, QThread,
+                          QUrl, Signal)
+from PySide6.QtGui import (QFont, QFontDatabase, QFontMetrics, QIcon, QImage,
                          QMouseEvent, QPixmap, QTextBlock, QTextDocument)
-from PyQt5.QtWidgets import QApplication, QFrame, QWidget
+from PySide6.QtWidgets import QApplication, QFrame, QWidget
 
 from GUI.noteGUI import Ui_Note
 from imageCache import CacheManager
@@ -57,7 +57,7 @@ class ScaleableWindowFrame(QWidget):
 
     def mousePressEvent(self, a0: QMouseEvent) -> None:
         if a0.buttons() == Qt.MouseButton.LeftButton:
-            self.lastPos = a0.globalPos()
+            self.lastPos = a0.globalPosition()
         a0.accept()
 
     def mouseMoveEvent(self, a0: QMouseEvent) -> None:
@@ -71,7 +71,7 @@ class ScaleableWindowFrame(QWidget):
     def handleDrag(self, a0: QMouseEvent):
         if not self.lastPos or not self.prevDir:
             return
-        diff = a0.globalPos() - self.lastPos
+        diff = a0.globalPosition() - self.lastPos
 
         dx = diff.x()
         dy = diff.y()
@@ -124,14 +124,16 @@ class ScaleableWindowFrame(QWidget):
         }
 
         methods[self.prevDir]()
-        self.lastPos = a0.globalPos()
+        self.lastPos = a0.globalPosition()
         a0.accept()
 
     def handleHover(self, a0: QMouseEvent):
 
         # first determine which edge the mouse cursor is on
-        x = a0.globalX() - self.x()
-        y = a0.globalY() - self.y()
+        
+        gpos = a0.globalPosition()
+        x = gpos.x() - self.x()
+        y = gpos.y() - self.y()
 
         # vertical direction
         if y < dragMargin:
@@ -181,9 +183,11 @@ def ignoreEdgeDrag(target: QWidget, parent: ScaleableWindowFrame, borderSize: in
             if target.ignoring:
                 event.ignore()
                 return
+            
+            gpos = event.globalPosition()
 
-            mX = event.globalX()
-            mY = event.globalY()
+            mX = gpos.x()
+            mY = gpos.y()
 
             pX0 = parent.x()
             pY0 = parent.y()
@@ -297,7 +301,7 @@ class Note(Ui_Note, ScaleableWindowFrame):
         font = QFont()
         font.setFamily("Roboto")
 
-        font.setWeight(35)
+        font.setWeight(QFont.Weight.Normal)
         font.setPointSize(11)
         self.previewFont = font
         self.preview.setFont(self.previewFont)
@@ -306,7 +310,7 @@ class Note(Ui_Note, ScaleableWindowFrame):
         self.editor.setFont(self.editorFont)
 
         metric = QFontMetrics(self.editorFont)
-        self.editor.setTabStopDistance(metric.width(" ") * 4)
+        self.editor.setTabStopDistance(metric.boundingRect("\t").width())
 
         # button icons
         self.pinIcon = QIcon(QPixmap(getResource("GUI\\pin.svg")))
@@ -470,11 +474,11 @@ def makeFrameDraggable(frame: QFrame):
     frame.offset = None
 
     def mousePressEvent(a0: QMouseEvent):
-        frame.offset = a0.screenPos() - frame.mapToGlobal(frame.pos())
+        frame.offset = a0.globalPosition() - frame.mapToGlobal(frame.pos())
 
     def mouseMoveEvent(a0: QMouseEvent):
         if frame.offset:
-            frame.parent().move((a0.screenPos() - frame.offset).toPoint())
+            frame.parent().move((a0.globalPosition() - frame.offset).toPoint())
 
     # def mouseExitEvent(a0: QMouseEvent):
     #     frame.offset = None
@@ -489,7 +493,7 @@ def makeFrameDraggable(frame: QFrame):
 
 
 class NoteUpdateThread(QThread):
-    updateSignal = pyqtSignal()
+    updateSignal = Signal()
 
     def __init__(self, parent: Note = None) -> None:
         super().__init__(parent)

@@ -8,7 +8,7 @@ from validators import url as isUrl
 
 from requests.exceptions import RequestException
 from hashlib import md5
-from PyQt5.QtGui import QImage, QPixmap
+from PySide6.QtGui import QImage, QPixmap
 
 imageExt = {"image/bmp": ".bmp", "image/jpeg": ".jpg", "image/png": ".png"}
 

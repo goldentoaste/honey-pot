@@ -7,9 +7,9 @@ from random import randint
 from time import time
 from typing import List
 
-from PyQt5.QtCore import QMimeData, QSize, QUrl, pyqtSignal
-from PyQt5.QtGui import QImage
-from PyQt5.QtWidgets import QTextBrowser, QTextEdit
+from PySide6.QtCore import QMimeData, QSize, QUrl, Signal
+from PySide6.QtGui import QImage
+from PySide6.QtWidgets import QTextBrowser, QTextEdit
 
 from imageCache import CacheManager
 from syntaxHighlighting import EditorHighlighter, Languages, PreviewHighlighter
@@ -30,7 +30,7 @@ def cleanSlash(d: str):
 
 class MarkdownPreview(QTextBrowser):
 
-    fileAddedSignal = pyqtSignal(str)
+    fileAddedSignal = Signal(str)
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -67,7 +67,7 @@ class MarkdownPreview(QTextBrowser):
             block = textwrap.indent(html.escape(block).strip("\n").replace("\\", "\\\\"), "    ")
             print(self.langHeaderMap[langType].encode("utf8"))
             markdown = mdCodeBlockRegex.sub(
-                f'<pre style="background-color:#292828;color:#d4be98">\n<p1 style="font-size: 12px;">\n\n{self.langHeaderMap[langType]}{block}\u200c\n</p1></pre>',
+                f'<pre style="background-color:#292828;color:#d4be98">\n<p1 style="font-size: 14px;">\n\n{self.langHeaderMap[langType]}{block}\u200c\n</p1></pre>',
                 markdown,
                 1,
             )
@@ -96,7 +96,7 @@ class MarkdownEditor(QTextEdit):
     class used to inject markdown behaviour into a QTextEdit
     """
 
-    fileAddedSignal = pyqtSignal(str)
+    fileAddedSignal = Signal(str)
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)

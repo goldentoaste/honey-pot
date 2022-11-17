@@ -1,7 +1,7 @@
 import os
 import re
 import sys
-from PyQt5.QtCore import (QRegularExpression, QRegularExpressionMatch,
+from PySide6.QtCore import (QRegularExpression, QRegularExpressionMatch,
                           QRegularExpressionMatchIterator)
 reflags = QRegularExpression.PatternOption
 

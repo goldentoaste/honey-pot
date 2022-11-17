@@ -2,9 +2,9 @@ from enum import Enum, IntFlag, auto
 from re import L
 from typing import List, NamedTuple, Tuple
 
-from PyQt5.QtCore import (QRegularExpression, QRegularExpressionMatch,
+from PySide6.QtCore import (QRegularExpression, QRegularExpressionMatch,
                           QRegularExpressionMatchIterator)
-from PyQt5.QtGui import (QColor, QFont, QSyntaxHighlighter, QTextCharFormat,
+from PySide6.QtGui import (QColor, QFont, QSyntaxHighlighter, QTextCharFormat,
                          QTextDocument)
 
 from codeparser import (addToState, emptyState, pythonState, removeState,jsState,
