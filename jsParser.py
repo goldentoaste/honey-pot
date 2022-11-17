@@ -47,6 +47,8 @@ tsKeywords = [
     "function",
     "keyof",
     "import",
+    "from",
+    "of"
 ]
 '''
 keywords (red)
@@ -61,7 +63,7 @@ typeDelare (light blue)
 classDeclare (dark green)
 
 '''
-keywordsRegex = QRegularExpression(r"\b((?:as|break|c(?:a(?:se|tch)|lass|ontinue)|do|e(?:lse|num|xport)|f(?:inally|or|unction)|get|i(?:mport|n(?:(?:stanceof|terface))?|f)|keyof|module|new|p(?:ackage|rivate|ublic)|return|s(?:t(?:atic|ring)|uper|witch)|t(?:h(?:is|row)|ry|ypeof)|while|yield))\b")
+keywordsRegex = QRegularExpression(r"\b((?:as|break|c(?:a(?:se|tch)|lass|ontinue)|do|e(?:lse|num|xport)|f(?:inally|or|rom|unction)|get|i(?:mport|n(?:(?:stanceof|terface))?|f)|keyof|module|new|of|p(?:ackage|rivate|ublic)|return|s(?:t(?:atic|ring)|uper|witch)|t(?:h(?:is|row)|ry|ypeof)|while|yield))\b")
 
 # to be orange
 varClass = ["var", "let", "const", "type", "extends", "implements"]
@@ -76,14 +78,14 @@ constantsRegex = QRegularExpression(r"\b(false|null|true|undefined|this|window|\
 
 # should be blue, none included types aka not builtin/common type names should be green/obj
 types = ["void", "string", "boolean", "number", "any"]
-typesRegex = QRegularExpression(r"\b(any|boolean|number|string|void)\b")
+typesRegex = QRegularExpression(r"\b(any|boolean|number|string|void|int|console)\b")
 
 # to be orange
 operators = ["<", ">", "=", "\+", "\*", "&", "\|", "%", "-", "!", "\?", "~", "^", "\/"]
-slashBar = "\|"
-operatorsRegex = QRegularExpression(f"\\b{slashBar.join(operators)}\\b")
+bar = "|"
+operatorsRegex = QRegularExpression(f"{bar.join(operators)}")
 
-functionRegex = QRegularExpression("([a-zA-z_]+[a-zA-z_0-9]*)(?:\(|<)")
+functionRegex = QRegularExpression("([a-zA-z_]+[a-zA-z_0-9]*)(?:\()")
 
 stringRegex1 = QRegularExpression(r"\"([^\"])*\"")
 stringRegex2 =QRegularExpression(r"\'([^\'])*\'")
@@ -97,8 +99,9 @@ typeHintRegex = QRegularExpression(r':([\w\s_0-9]+)(?:[,)\n])')
 typeDeclareRegex = QRegularExpression(r"(?:type|enum)\s+(\w+)")
 classDelareRegex = QRegularExpression(r"(?:class)\s+(\w+)")
 
+numbericsRegex = QRegularExpression("\\b[1-9_.]+\\b")
 
-
+jsxTagRegex = QRegularExpression("<\/?(\s*\w+)")
 
 class JsParser(AbstractParser):
     def __init__(self, parser: QSyntaxHighlighter) -> None:
@@ -141,9 +144,7 @@ class JsParser(AbstractParser):
             match = stringMatchs.next()
             self.setFormat(match.capturedStart(), match.capturedLength(), self.string)
         
-        commentMatch = commentRegex.match(text)
-        if commentMatch.capturedStart() >= 0:
-            self.setFormat(commentMatch.capturedStart(), len(text)-commentMatch.capturedStart(), self.comment)
+       
         
         typeHints = typeHintRegex.globalMatch(text)
         while typeHints.hasNext():
@@ -152,9 +153,28 @@ class JsParser(AbstractParser):
         
         typeDeclareMatch = typeDeclareRegex.match(text)
         if typeDeclareMatch.capturedStart() >= 0:
-            self.setFormat(typeDeclareMatch.capturedStart(1), typeDeclareMatch.capturedLength(1), self.obj)\
+            self.setFormat(typeDeclareMatch.capturedStart(1), typeDeclareMatch.capturedLength(1), self.obj)
                 
         
+        constMatches = constantsRegex.globalMatch(text)
+        while constMatches.hasNext():
+            match = constMatches.next()
+            self.setFormat(match.capturedStart(), match.capturedLength(), self.numeric)
             
+        numericMatches = numbericsRegex.globalMatch(text)
+        while numericMatches.hasNext():
+            match = numericMatches.next()
+            self.setFormat(match.capturedStart(), match.capturedLength(), self.numeric)
         
         
+        classMatch = classDelareRegex.match(text)
+        self.setFormat(classMatch.capturedStart(1), classMatch.capturedLength(1), self.builtin)
+        
+        jsxMatches = jsxTagRegex.globalMatch(text)
+        while jsxMatches.hasNext():
+            match = jsxMatches.next()
+            self.setFormat(match.capturedStart(1), match.capturedLength(1), self.builtin)
+            
+        commentMatch = commentRegex.match(text)
+        if commentMatch.capturedStart() >= 0:
+            self.setFormat(commentMatch.capturedStart(), len(text)-commentMatch.capturedStart(), self.comment)

@@ -70,7 +70,45 @@ class Trie():
     
 if __name__ == '__main__':
     pythonKeywords =  [
-"<", ">", "=", "\+", "\*", "&", "\|", "%", "-", "!", "\?", "~", "^", "\/"
+ "class",
+    "break",
+    "case",
+    "module",
+    "public",
+    "finally",
+    "in",
+    "package",
+    "new",
+    "continue",
+    "as",
+    "if",
+    "private",
+    "for",
+    "super",
+    "return",
+    "try",
+    "do",
+    "throw",
+    "string",
+    "instanceof",
+    "enum",
+    "while",
+    "this",
+    "static",
+    "interface",
+    "yield",
+    "catch",
+    "switch",
+    "else",
+    "get",
+    "typeof",
+    "export",
+    "new",
+    "function",
+    "keyof",
+    "import",
+    "from",
+    "of"
 
 ]
     t = Trie()

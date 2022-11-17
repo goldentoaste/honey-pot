@@ -94,6 +94,7 @@ class AbstractParser:
         self.comment.setFont(codeFont)
 
     def highlightBlock(self, text:str):
+        
         pass
 
         
