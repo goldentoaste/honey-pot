@@ -99,7 +99,7 @@ typeHintRegex = QRegularExpression(r':([\w\s_0-9]+)(?:[,)\n])')
 typeDeclareRegex = QRegularExpression(r"(?:type|enum)\s+(\w+)")
 classDelareRegex = QRegularExpression(r"(?:class)\s+(\w+)")
 
-numbericsRegex = QRegularExpression("\\b[1-9_.]+\\b")
+numbericsRegex = QRegularExpression("\\b[0-9.]+\\b")
 
 jsxTagRegex = QRegularExpression("<\/?(\s*\w+)")
 

@@ -105,7 +105,7 @@ pythonBuiltinRegex = QRegularExpression(
 )
 
 
-pythonNumberics = QRegularExpression("\\b[1-9_.]+\\b")
+pythonNumberics = QRegularExpression("\\b[0-9_.]+\\b")
 
 
 pythonClassRegex = QRegularExpression(r"class\s+([\w\s]+)(?:\(([\w\s,.]+)\))?\s*:")
