@@ -52,6 +52,7 @@ class MarkdownPreview(QTextBrowser):
         }
 
         self.highlighter = PreviewHighlighter(self.document())
+        self.document().setIndentWidth(20)
 
     def setMarkdown(self, markdown: str) -> None:
         # fixing code blocks

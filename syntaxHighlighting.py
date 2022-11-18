@@ -3,14 +3,14 @@ from re import L
 from typing import List, NamedTuple, Tuple
 
 from PySide6.QtCore import (QRegularExpression, QRegularExpressionMatch,
-                          QRegularExpressionMatchIterator)
+                            QRegularExpressionMatchIterator)
 from PySide6.QtGui import (QColor, QFont, QSyntaxHighlighter, QTextCharFormat,
-                         QTextDocument)
+                           QTextDocument)
 
-from codeparser import (addToState, emptyState, pythonState, removeState,jsState,
-                        stateContains)
-from pythonParser import PythonParser
+from codeparser import (addToState, emptyState, jsState, pythonState,
+                        removeState, stateContains)
 from jsParser import JsParser
+from pythonParser import PythonParser
 
 reflags = QRegularExpression.PatternOption
 
@@ -39,8 +39,6 @@ class PreviewHighlighter(QSyntaxHighlighter):
         self.blockLangs: List[Languages] = []
         self.blockLengths: List[Tuple[int, int]] = []  # Tuple[Start, EndIndex]
 
-
-        
         self.pythonStart = QRegularExpression("^\\x{200b}\\x{200b}(?!\\x{200b})", reflags.MultilineOption)
         self.jsStart = QRegularExpression("^\\x{200b}\\x{200b}\\x{200b}", reflags.MultilineOption)
         self.codeEndPattern = QRegularExpression("\\x{200c}$", reflags.MultilineOption)
@@ -62,42 +60,42 @@ class PreviewHighlighter(QSyntaxHighlighter):
         self.matchLength = 0
         self.offset = 0
 
-    def updateCodeBlock(self, newBlocks):   
+    def updateCodeBlock(self, newBlocks):
         self.blockLangs = newBlocks
         self.matchLength = 0
 
     def highlightBlock(self, text: str) -> None:
         self.checkPython(text)
         self.checkJS(text)
-    
-    
-    def checkJS(self, text:str):
+
+    def checkJS(self, text: str):
         if stateContains(self.previousBlockState(), jsState):
             endMatch = self.codeEndPattern.match(text)
             self.jsParser.highlightBlock(text)
             if endMatch.capturedStart() < 0:
                 self.setCurrentBlockState(addToState(self.currentBlockState(), jsState))
         else:
-            startMatch= self.jsStart.match(text)
+            startMatch = self.jsStart.match(text)
             endMatch = self.codeEndPattern.match(text)
             if startMatch.capturedStart() >= 0:
                 self.jsParser.highlightBlock(text)
-                if  endMatch.capturedStart() < 0:
+                if endMatch.capturedStart() < 0:
                     self.setCurrentBlockState(addToState(self.currentBlockState(), jsState))
-    
-    def checkPython(self, text:str):
+
+    def checkPython(self, text: str):
         if stateContains(self.previousBlockState(), pythonState):
             endMatch = self.codeEndPattern.match(text)
             self.pythonParser.highlightBlock(text)
             if endMatch.capturedStart() < 0:
                 self.setCurrentBlockState(addToState(self.currentBlockState(), pythonState))
         else:
-            startMatch= self.pythonStart.match(text)
+            startMatch = self.pythonStart.match(text)
             endMatch = self.codeEndPattern.match(text)
             if startMatch.capturedStart() >= 0:
                 self.pythonParser.highlightBlock(text)
-                if  endMatch.capturedStart() < 0:
+                if endMatch.capturedStart() < 0:
                     self.setCurrentBlockState(addToState(self.currentBlockState(), pythonState))
+
 
 NoneState = 0
 CodeBLockState = 2  # check state using prime numbers and modulo
@@ -133,6 +131,21 @@ class EditorHighlighter(QSyntaxHighlighter):
         self.numeric = QTextCharFormat()  # #d3869b
         self.numeric.setForeground(SyntaxColor.numeric)
         self.numeric.setFont(codeFont)
+        
+        self.errorColor = QTextCharFormat()
+        self.errorColor.setBackground(QColor(234, 105, 98, 100))
+        self.indentColors = [
+          QTextCharFormat(),
+          QTextCharFormat(),
+          QTextCharFormat(),
+          QTextCharFormat(),
+        ]
+        
+        for f,c in zip(self.indentColors,(  QColor(216, 166, 87, 100),
+            QColor(169, 182, 101, 100),
+            QColor(211, 134, 155,100),
+            QColor(125, 174, 163,100))):
+            f.setBackground(c)
 
         # comments is not supported for markdown, because there is no use case in a sticky note app
         self.comment = QTextCharFormat()  # #928374
@@ -171,16 +184,17 @@ class EditorHighlighter(QSyntaxHighlighter):
         self.linkPattern = QRegularExpression(r"\[([\s\S]*?)\]\(([\s\S]+?)\)", reflags.MultilineOption)
 
         self.genericRules: List[Tuple[QRegularExpression, QTextCharFormat]] = [
-            (QRegularExpression(pattern, reflags.MultilineOption), format)
-            for pattern, format in mdGenericPatterns
+            (QRegularExpression(pattern, reflags.MultilineOption), format) for pattern, format in mdGenericPatterns
         ]
 
-        self.codeBlockStartPattern = QRegularExpression(
-            r"^```", reflags.MultilineOption
-        )
+        self.codeBlockStartPattern = QRegularExpression(r"^```", reflags.MultilineOption)
         self.codeblockLangPattern = QRegularExpression(r"txt|text|python|py|js|javascript|ts|typescipt")
         self.codeBlockEndPattern = QRegularExpression(r"```\s*$", reflags.MultilineOption)
+        self.indentRegex = QRegularExpression(r"^\s+", reflags.MultilineOption)
+        self.newLineRegex = QRegularExpression(r"\s\s$", reflags.MultilineOption)
         self.codeStartIndex = 0
+        
+        
 
     def highlightBlock(self, text: str) -> None:
         for rule, format in self.genericRules:
@@ -225,3 +239,39 @@ class EditorHighlighter(QSyntaxHighlighter):
                 langMatch = self.codeblockLangPattern.match(text)
                 if langMatch.capturedStart() != -1:
                     self.setFormat(langMatch.capturedStart(), langMatch.capturedLength(), self.builtin)
+
+        # highlighting indent
+        
+        indentMatch = self.indentRegex.match(text)
+
+        spaceCounter = 0
+        colorIndex = -1
+        for i in range(indentMatch.capturedStart(), indentMatch.capturedEnd()):
+            
+            if text[i] == " ":
+                spaceCounter += 1
+            elif text[i] == "\t":
+                if spaceCounter > 0:
+                    print(spaceCounter, i - spaceCounter-1)
+                    self.setFormat(i - spaceCounter, spaceCounter, self.errorColor)  
+                spaceCounter = 999
+                
+                
+            if spaceCounter == 4:
+                colorIndex += 1
+                colorIndex %= len(self.indentColors)
+                self.setFormat(i - spaceCounter + 1, spaceCounter, self.indentColors[colorIndex])
+                spaceCounter = 0
+                
+            if spaceCounter == 999: # handling tab chars
+                colorIndex += 1
+                colorIndex %= len(self.indentColors)
+                self.setFormat(i , 1, self.indentColors[colorIndex])
+                spaceCounter = 0
+        
+        if spaceCounter >0:
+            self.setFormat(indentMatch.capturedEnd() - spaceCounter, spaceCounter, self.errorColor)
+            
+        newLineMatch =  self.newLineRegex.match(text)
+        if newLineMatch.capturedStart() >0:
+            self.setFormat(newLineMatch.capturedStart(), newLineMatch.capturedLength(), self.errorColor)

@@ -37,8 +37,9 @@
 
 
 * additional markdown syntax highlights
-    - highight double space at the end of line to indicate line break
-    - highlight `\n` on its own line, also linebreak
+    - ~~highight double space at the end of line to indicate line break~~
+    - ~~highlight `\n` on its own line, also linebreak~~ (will ignore for now)
+    - ~~highlight tab indents at the beginning~~
 
 * add emoji support
     - should respect escaped `\:`
@@ -48,3 +49,5 @@
         + `:bread`
         + `bricks`
         + `brain` etc
+        
+        sdsaadsad

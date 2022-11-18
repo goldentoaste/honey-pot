@@ -50,7 +50,7 @@ class AbstractParser:
     
     def __init__(self, parser: QSyntaxHighlighter) -> None:
         self.parser = parser
-        
+
         self.currentBlock = self.parser.currentBlock
         self.setCurrentBlockState = self.parser.setCurrentBlockState
         self.currentBlockState=  self.parser.currentBlockState

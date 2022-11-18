@@ -310,7 +310,7 @@ class Note(Ui_Note, ScaleableWindowFrame):
         self.editor.setFont(self.editorFont)
 
         metric = QFontMetrics(self.editorFont)
-        self.editor.setTabStopDistance(metric.boundingRect("\t").width())
+        self.editor.setTabStopDistance(metric.boundingRect("    ").width())
 
         # button icons
         self.pinIcon = QIcon(QPixmap(getResource("GUI\\pin.svg")))
