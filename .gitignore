@@ -153,3 +153,8 @@ cython_debug/
 
 .qt_for_python
 testCache
+
+*.build
+*.dist
+*.onefile-build
+*.exe

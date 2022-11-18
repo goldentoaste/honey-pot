@@ -4,10 +4,10 @@ from threading import Thread
 from time import sleep, time
 from typing import Dict, Literal, Tuple
 
-from PySide6.QtCore import (QEvent, QMargins, QPoint, QRect, QSizeF, Qt, QThread,
-                          QUrl, Signal)
+from PySide6.QtCore import (QEvent, QMargins, QPoint, QRect, QSizeF, Qt,
+                            QThread, QUrl, Signal)
 from PySide6.QtGui import (QFont, QFontDatabase, QFontMetrics, QIcon, QImage,
-                         QMouseEvent, QPixmap, QTextBlock, QTextDocument)
+                           QMouseEvent, QPixmap, QTextBlock, QTextDocument)
 from PySide6.QtWidgets import QApplication, QFrame, QWidget
 
 from GUI.noteGUI import Ui_Note
@@ -75,51 +75,34 @@ class ScaleableWindowFrame(QWidget):
 
         dx = diff.x()
         dy = diff.y()
-        
-        
+
         if self.prevDir[0] == top:
             if self.height() - dy < self.minimumHeight():
                 dy = 0
-        
+
         if self.prevDir[1] == left:
             if self.width() - dx < self.minimumWidth():
                 dx = 0
 
         methods = {
             (top, left): lambda: (
-                self.setGeometry(
-                    QRect(self.pos() + QPoint(dx, dy), self.size().grownBy(QMargins(0, 0, -dx, -dy)))
-                )
+                self.setGeometry(QRect(self.pos() + QPoint(dx, dy), self.size().grownBy(QMargins(0, 0, -dx, -dy))))
             ),
             (top, None): lambda: (
-                self.setGeometry(
-                    QRect(self.pos() + QPoint(0, dy), self.size().grownBy(QMargins(0, 0, 0, -dy)))
-                )
+                self.setGeometry(QRect(self.pos() + QPoint(0, dy), self.size().grownBy(QMargins(0, 0, 0, -dy))))
             ),
             (top, right): lambda: (
-                self.setGeometry(
-                    QRect(self.pos() + QPoint(0, dy), self.size().grownBy(QMargins(0, 0, dx, -dy)))
-                )
+                self.setGeometry(QRect(self.pos() + QPoint(0, dy), self.size().grownBy(QMargins(0, 0, dx, -dy))))
             ),
             (None, left): lambda: (
-                self.setGeometry(
-                    QRect(self.pos() + QPoint(dx, 0), self.size().grownBy(QMargins(0, 0, -dx, 0)))
-                )
+                self.setGeometry(QRect(self.pos() + QPoint(dx, 0), self.size().grownBy(QMargins(0, 0, -dx, 0))))
             ),
-            (None, right): lambda: (
-                self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, dx, 0))))
-            ),
+            (None, right): lambda: (self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, dx, 0))))),
             (bot, left): lambda: (
-                self.setGeometry(
-                    QRect(self.pos() + QPoint(dx, 0), self.size().grownBy(QMargins(0, 0, -dx, dy)))
-                )
+                self.setGeometry(QRect(self.pos() + QPoint(dx, 0), self.size().grownBy(QMargins(0, 0, -dx, dy))))
             ),
-            (bot, None): lambda: (
-                self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, 0, dy))))
-            ),
-            (bot, right): lambda: (
-                self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, dx, dy))))
-            ),
+            (bot, None): lambda: (self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, 0, dy))))),
+            (bot, right): lambda: (self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, dx, dy))))),
             (None, None): lambda: (),
         }
 
@@ -130,7 +113,7 @@ class ScaleableWindowFrame(QWidget):
     def handleHover(self, a0: QMouseEvent):
 
         # first determine which edge the mouse cursor is on
-        
+
         gpos = a0.globalPosition()
         x = gpos.x() - self.x()
         y = gpos.y() - self.y()
@@ -183,7 +166,7 @@ def ignoreEdgeDrag(target: QWidget, parent: ScaleableWindowFrame, borderSize: in
             if target.ignoring:
                 event.ignore()
                 return
-            
+
             gpos = event.globalPosition()
 
             mX = gpos.x()
@@ -237,12 +220,7 @@ def ignoreHover(ob: QWidget) -> QWidget:
 
 
 class Note(Ui_Note, ScaleableWindowFrame):
-    def __init__(
-        self,
-        filePath: str,
-        cacheManager: CacheManager,
-        markdown: str = None,
-    ) -> None:
+    def __init__(self, filePath: str, cacheManager: CacheManager, markdown: str = None,) -> None:
         super().__init__()
         self.setupUi(self)
         self.cacheManager = cacheManager
@@ -310,7 +288,7 @@ class Note(Ui_Note, ScaleableWindowFrame):
         self.editor.setFont(self.editorFont)
 
         metric = QFontMetrics(self.editorFont)
-        self.editor.setTabStopDistance(metric.boundingRect("    ").width())
+        self.editor.setTabStopDistance(metric.maxWidth())
 
         # button icons
         self.pinIcon = QIcon(QPixmap(getResource("GUI\\pin.svg")))
@@ -444,18 +422,8 @@ class Note(Ui_Note, ScaleableWindowFrame):
                                     r"D:\PythonProject\stickyMarkdown\testCache\2e53f07491fb7dc99e3aa8d9c9b4c8a9.png"
                                 ),
                             )
-                            print(
-                                self.preview.document().resource(
-                                    2,
-                                    QUrl(imagePath),
-                                )
-                            )
-                            print(
-                                self.preview.document().resource(
-                                    2,
-                                    QUrl("stufgf"),
-                                )
-                            )
+                            print(self.preview.document().resource(2, QUrl(imagePath),))
+                            print(self.preview.document().resource(2, QUrl("stufgf"),))
                             # self.preview.loadResource(2, QUrl(cachedWebFile))
                             # self.preview.viewport().update()
                             # cursor.setPosition(fragment.position(), QTextCursor.MoveAnchor)
@@ -517,22 +485,9 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
 
-    # from qt_material import apply_stylesheet
-
-    # apply_stylesheet(app, theme='GUI/colors.xml')
-
     n = Note(
-        r"D:\PythonProject\stickyMarkdown\test.md",
-        CacheManager(r"D:\PythonProject\stickyMarkdown\testCache", 5),
-        "",
+        r"D:\PythonProject\stickyMarkdown\test.md", CacheManager(r"D:\PythonProject\stickyMarkdown\testCache", 5), "",
     )
-
-    # with open("test.md", "r", encoding="utf8") as f:
-    #     n = Note(
-    #         r"D:\PythonProject\stickyMarkdown\test.md",
-    #         CacheManager(r"D:\PythonProject\stickyMarkdown\testCache", 5),
-    #         f.read(),
-    #     )
-
     n.show()
+
     sys.exit(app.exec_())

@@ -1,9 +1,10 @@
 from PySide6.QtCore import (QRegularExpression, QRegularExpressionMatch,
-                          QRegularExpressionMatchIterator)
+                            QRegularExpressionMatchIterator)
 from PySide6.QtGui import (QColor, QFont, QSyntaxHighlighter, QTextCharFormat,
-                         QTextDocument)
+                           QTextDocument)
 
-from codeparser import AbstractParser, addToState, removeState, stateContains, pythonMLCommentState
+from codeparser import (AbstractParser, addToState, pythonMLCommentState,
+                        removeState, stateContains)
 
 reflags = QRegularExpression.PatternOption
 
@@ -64,8 +65,7 @@ pythonOperators = [
     "\/\/",
     "&",
     "~",
-    "\|"
-    
+    "\|",
 ]
 
 pythonOpRegex = QRegularExpression("((\sand\s)|(\sor\s)|(\snot\s)|(\sis\s)|<|>|=|!|\+|-|\/|\*|^|%|\/\/|&|~)")
@@ -111,7 +111,6 @@ pythonNumberics = QRegularExpression("\\b[0-9_.]+\\b")
 pythonClassRegex = QRegularExpression(r"class\s+([\w\s]+)(?:\(([\w\s,.]+)\))?\s*:")
 
 
-
 class PythonParser(AbstractParser):
     def __init__(self, parser: QSyntaxHighlighter):
         super().__init__(parser)
@@ -122,12 +121,12 @@ class PythonParser(AbstractParser):
 
         self.importregex = QRegularExpression(r"(?:from\s+([\w.]+)\s+)?import\s+\(?([\w.,\s]+)(?:$|\))")
         self.exceptionRegex = QRegularExpression(r"except\s+\(?([\w.,\s]+?)\)?(?:as|:)")
-        self.stringPrefixRegex= QRegularExpression(r"(f|u|r|b)(?:'|\")")
+        self.stringPrefixRegex = QRegularExpression(r"(f|u|r|b)(?:'|\")")
         self.string1regex = QRegularExpression(r"\"([^\"])*\"")
         self.string2regex = QRegularExpression(r"\'([^\'])*\'")
         self.commentRegex = QRegularExpression(r"#[^\n]*")
         self.multiline = QRegularExpression(r"\"\"\"|\'\'\'")
-        
+
         self.genericRules = [
             (pythonOpRegex, self.symbol),
             (pythonKeywordsRegex, self.keyword),
@@ -135,12 +134,12 @@ class PythonParser(AbstractParser):
             (pythonNumberics, self.numeric),
             (selfRegex, self.numeric),
             (self.string1regex, self.string),
-            (self.string2regex, self.string)
+            (self.string2regex, self.string),
         ]
 
     def highlightBlock(self, text: str):
         importMatchs = self.importregex.globalMatch(text)
-        
+
         while importMatchs.hasNext():
             importMatch = importMatchs.next()
             if importMatch.captured(1) == "":
@@ -148,8 +147,7 @@ class PythonParser(AbstractParser):
             else:
                 self.setFormat(importMatch.capturedStart(1), importMatch.capturedLength(1), self.builtin)
                 self.setFormat(importMatch.capturedStart(2), importMatch.capturedLength(2), self.obj)
-        
-        
+
         for rule, format in self.genericRules:
             matches: QRegularExpressionMatchIterator = rule.globalMatch(text)
             while matches.hasNext():
@@ -161,28 +159,25 @@ class PythonParser(AbstractParser):
             match: QRegularExpressionMatch = funcMatchs.next()
             self.setFormat(match.capturedStart(1), match.capturedLength(1), self.function)
 
-        
         exceptMatch = self.exceptionRegex.match(text)
         self.setFormat(exceptMatch.capturedStart(1), exceptMatch.capturedLength(1), self.obj)
 
         prefixMatch = self.stringPrefixRegex.match(text)
-        self.setFormat(prefixMatch.capturedStart(1), prefixMatch.capturedLength(1), self.builtin) 
-    
+        self.setFormat(prefixMatch.capturedStart(1), prefixMatch.capturedLength(1), self.builtin)
+
         classMatch = pythonClassRegex.match(text)
         for i in range(1, len(classMatch.capturedTexts()), 1):
             self.setFormat(classMatch.capturedStart(i), classMatch.capturedLength(i), self.obj)
-    
-    
+
         constMatches = pythonConstRegex.globalMatch(text)
         while constMatches.hasNext():
             match = constMatches.next()
             self.setFormat(match.capturedStart(), match.capturedLength(), self.obj)
-        
-    
+
         # comment overrides all
         commentMatch = self.commentRegex.match(text)
-        self.setFormat(commentMatch.capturedStart(), commentMatch.capturedLength(), self.comment) 
-        
+        self.setFormat(commentMatch.capturedStart(), commentMatch.capturedLength(), self.comment)
+
         # multiline strings :skull:
         if stateContains(self.previousBlockState(), pythonMLCommentState):
             endMatch = self.multiline.match(text)
@@ -196,13 +191,12 @@ class PythonParser(AbstractParser):
             matchlist = []
             while matches.hasNext():
                 matchlist.append(matches.next())
-            
+
             if len(matchlist) == 1:
-                match : QRegularExpressionMatch= matchlist[0]
+                match: QRegularExpressionMatch = matchlist[0]
                 self.setFormat(match.capturedStart(), len(text) - match.capturedStart(), self.string)
                 self.setCurrentBlockState(addToState(self.currentBlockState(), pythonMLCommentState))
-            elif len(matchlist) > 1: # igoring multiple multiline strings occuring in the same line
+            elif len(matchlist) > 1:  # igoring multiple multiline strings occuring in the same line
                 start = matchlist[0]
-                end:QRegularExpressionMatch = matchlist[1]
+                end: QRegularExpressionMatch = matchlist[1]
                 self.setFormat(start.capturedStart(), end.capturedEnd() - start.capturedStart(), self.string)
-            
