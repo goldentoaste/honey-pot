@@ -2,413 +2,445 @@
 ---
 
 ```javascript
-import React, { useEffect, useRef, useState } from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
-import { InputAdornment } from '@mui/material';
+import type Url from 'url';
 
-class Vector2 {
+import { Meteor } from 'meteor/meteor';
+import type { FilterOperators } from 'mongodb';
+import type {
+	IMessage,
+	IRoom,
+	IUser,
+	ILivechatDepartmentRecord,
+	ILivechatAgent,
+	OmnichannelAgentStatus,
+	ILivechatInquiryRecord,
+	ILivechatVisitor,
+	VideoConference,
+	ParsedUrl,
+	OEmbedMeta,
+	OEmbedUrlContent,
+} from '@rocket.chat/core-typings';
 
+import type { Logger } from '../app/logger/server';
+import type { IBusinessHourBehavior } from '../app/livechat/server/business-hour/AbstractBusinessHour';
+import { getRandomId } from './random';
+import type { ILoginAttempt } from '../app/authentication/server/ILoginAttempt';
+import { compareByRanking } from './utils/comparisons';
 
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-    }
-
-    static get zero() {
-        return new Vector2(0, 0);
-    }
-
-    static r2d(rad) {
-        //converts radian into degrees
-        return 360 * rad / (2 * Math.PI);
-    }
-
-    static d2r(deg) {
-        return (deg / 360) * 2 * Math.PI;
-    }
-
-    rotated(angle) {
-        //rotates this vector by angle in radians, then return the rotated vector.
-
-        let cos = Math.cos(angle);
-        let sin = Math.sin(angle)
-
-        let x = this.x;
-        let y = this.y;
-
-        this.x = x * cos - y * sin;
-        this.y = x * sin + y * cos;
-
-        return this;
-    }
-
-    mag() {
-        return Math.sqrt(this.x ** 2 + this.y ** 2);
-    }
-
-    angle() {
-        //returns angle relative to x-axis in radians
-        return Math.atan2(this.y, this.x);
-    }
-
-    dot(v2) {
-        //returns the dot product of the 2 vectors, does not change either.
-        return (this.x * v2.x) + (this.y * v2.y);
-    }
-
-    add(vec) {
-        //adds another vector onto this one, and return result
-
-        return new Vector2(this.x + vec.x, this.y + vec.y);
-    }
-
-    mul(float) {
-        //mutipleis this vector with a float, and returns result
-
-        return new Vector2(float * this.x, float * this.y);
-    }
-
-    distTo(vec) {
-
-        return vec.add(this.mul(-1)).mag();
-    }
-
-    normalized() {
-        let mag = this.mag()
-        if (mag === 0) {
-            return Vector2.zero;
-        }
-        return new Vector2(this.x / mag, this.y / mag);
-    }
-
-    toString() {
-        return `Vector2 (${this.x} , ${this.y})`
-    }
+enum CallbackPriority {
+	HIGH = -1000,
+	MEDIUM = 0,
+	LOW = 1000,
 }
 
-
-const G = 6.674e-12; //universal gravitational constant
-const updatesPerSec = 60;
-const deltaTime = 1 / updatesPerSec;
-const multiplier = 1;
-class GravityBall {
-    constructor(position = Vector2.zero(), velocity = Vector2.zero(), mass = 0.0, radius = 0.0, color = "#304050", name = "wow!", nameColor = "#efe0e2") {
-        /*
-        postion : Vector2, initial postition of this ball
-        velocity : Vector2, initial velocity of this ball, in m/s
-        mass: float, mass of this ball, in kg
-        radius: float, radius of this ball, in m
-        */
-
-        this.position = position;
-        this.velocity = velocity;
-        this.mass = mass;
-        this.radius = radius;
-        this.color = color;
-        this.name = name;
-        this.nameColor = nameColor;
-    }
-
-    get x() {
-        return this.position.x;
-    }
-
-    get y() {
-        return this.position.y;
-    }
-
-    get deltaX() {
-        return this.velocity.x;
-    }
-
-    get deltaY() {
-        return this.velocity.y;
-    }
-
-
-
-    applyImpulse(force = Vector2.zero(), dt = 0.0) {
-        /*
-        impulse/change in momentum = F * dt = M * A * dt
-        => change in velocity = F * dt / mass
-        force: Vector2, in kg*m/s^2
-        dt: float, change in time
-        */
-
-        this.velocity = this.velocity.add(force.mul(multiplier * dt / this.mass));
-        // print(this.velocity)
-    }
-
-    applyAttraction(b2) {
-        /*
-            applying newton's gravitation formula:
-    
-            F = G * (m1 * m2) * dir / r^2 
-            where dir is the normalized vector/direction from b1 to b2, thus F is a force vector
-            b1 attracts b2 by F, b2 attacts b1 by -F
-    
-            note this function applies force to both objects to save a tiny bit of computation, so only 1 call is needed.
-        */
-
-        let dir = b2.position.add(this.position.mul(-1)).normalized(); //unit vector for direction
-
-        let distance = this.position.distTo(b2.position);
-        let F = dir.mul(G * this.mass * b2.mass / (distance ** 2));
-        this.applyImpulse(F, deltaTime);
-        b2.applyImpulse(F.mul(-1), deltaTime);
-    }
-
-    updatePos() {
-        this.position = this.position.add(this.velocity);
-    }
-
-    draw(ctx) {
-
-        ctx.fillStyle = this.color;
-        ctx.beginPath()
-        ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI)
-        ctx.fill()
-    }
-
-
-
-}
-
-
-
-/*
-https://medium.com/@pdx.lucasm/canvas-with-react-js-32e133c05258
-yoink!
-*/
-
-const Canvas = ({ objs, updateCallback, props }) => {
-    const canvasRef = useRef(null); //null as initial val
-    useEffect(() => {
-        const canvas = canvasRef.current
-        const context = canvas.getContext('2d');
-
-
-        let interval = setInterval(() => {
-            updateCallback();
-            context.clearRect(0, 0, context.canvas.width, context.canvas.height)
-            for (let item of objs) {
-                item.draw(context);
-            }
-        }, deltaTime * 1000);
-
-        return () => clearInterval(interval);
-    }, []) //initialize canvas on initial render
-    return (
-        <canvas ref={canvasRef} {...props} />
-    );
-}
-
-const AddObjDialog = ({ onFinish }) => {
-    const [open, setOpen] = useState(false);
-
-    const posRef = useRef(null);
-    const velRef = useRef(null);
-    const massRef = useRef(null);
-    const radiusRef = useRef(null);
-    const nameRef = useRef(null);
-    const nameColorRef = useRef(null);
-    const colorRef = useRef(null);
-
-    const [posValid, setPosValid] = useState(false);
-    const [velValid, setVelValid] = useState(false);
-
-
-    return (
-        <div>
-            <Button variant="outlined" onClick={() => { setOpen(true) }}>
-                Add Ball
-            </Button>
-            {/* do on finish values */}
-            <Dialog open={open} onClose={() => { setOpen("false") }}
-            >
-                <DialogTitle>Add a new gravity ball!</DialogTitle>
-                <DialogContent>
-                    Add a new gravity ball, with initial position and velocity, mass, radius(visual only, interact as if radius is 0). Color, name, name color are optional.
-                    Also, coordinate starts with 0,0 at upper left corner, positive X is right, positive Y is down.
-
-                    <TextField
-                        inputRef={posRef}
-                        variant="outlined"
-                        margin='normal'
-                        label="ini position"
-                        fullWidth
-                        defaultValue="(200 , 200)"
-                        onChange={(e) => {
-                            let newVal = e.target.value.replace(/{[^1-9,.]}/, "");
-                            e.target.value = newVal;
-                            setPosValid(newVal.split(",").every((val) => !isNaN(val)));
-                        }}
-                        error={posValid}
-                    />
-                    <TextField
-                        inputRef={velRef}
-                        variant="outlined"
-                        margin='normal'
-                        fullWidth
-                        label="ini velocity"
-                        defaultValue="(0 , 0)"
-                        onChange={(e) => {
-                            let newVal = e.target.value.replace(/{[^1-9,.]}/, "");
-                            e.target.value = newVal;
-                            setVelValid(newVal.split(",").every((val) => !isNaN(val)));
-                        }}
-                        error={velValid}
-                    />
-                    <TextField
-                        inputRef={massRef}
-                        type="number"
-                        margin='normal'
-                        variant="outlined"
-                        label="mass"
-                        defaultValue={10000000000000}
-                        InputProps={
-                            {
-                                endAdornment: <InputAdornment position='end'>kg</InputAdornment>,
-                            }
-                        }
-                    />
-                    <TextField
-                        inputRef={radiusRef}
-                        type="number"
-                        margin='normal'
-                        variant="outlined"
-                        label="radius"
-                        defaultValue={10}
-                        InputProps={
-                            {
-                                endAdornment: <InputAdornment position='end'>km</InputAdornment>,
-                            }
-                        }
-                    />
-
-                    <TextField
-                        inputRef={nameRef}
-                        margin='normal'
-                        variant="outlined"
-                        label="name"
-                        fullWidth
-                        defaultValue={"gravity ball!"}
-                    />
-                    <TextField
-
-                        inputRef={colorRef}
-                        margin='normal'
-                        variant="outlined"
-                        label="color"
-                        defaultValue={"#304050"}
-                    />
-                    <TextField
-                        inputRef={nameColorRef}
-                        defaultValue={"#efe0e2"}
-                        margin='normal'
-                        variant="outlined"
-                        label="name color"
-                    />
-                </DialogContent>
-                <DialogActions>
-
-                    <Button 
-                    onClick={() => {
-                        setOpen(false);
-                        onFinish(
-                            posRef.current.value,
-                            velRef.current.value,
-                            massRef.current.value,
-                            radiusRef.current.value,
-                            colorRef.current.value,
-                            nameRef.current.value,
-                            nameColorRef.current.value
-                        );
-                    }}>
-                        Add!
-                    </Button>
-                    <Button onClick={() => setOpen(false)}>Cancel</Button>
-                </DialogActions>
-            </Dialog>
-        </div>
-    );
-
-}
-
-const print = (item) => {
-    console.log(item)
-}
-
-const Parent = () => {
-    let stuff = [
-        new GravityBall(new Vector2(500, 400), new Vector2(0, 2), 8000000000000000, 30),
-        // new GravityBall(new Vector2(700, 400), new Vector2(0, -2), 8000000000000000, 30),
-        new GravityBall(new Vector2(1000, 400), new Vector2(0, 3.2), 10000000000000, 4),
-        new GravityBall(new Vector2(300, 400), new Vector2(0, -3.5), 90000000000000, 9),
-        new GravityBall(new Vector2(600, 800), new Vector2(3, 0.4), 9000000000000, 15),
-
-    ]
-    const update = () => {
-        let o = {};
-        for (let item1 of stuff) {
-            for (let item2 of stuff) {
-
-                if ((!(o[item1] === item2) || !(o[item2] === item1)) && item1 !== item2) {
-                    item1.applyAttraction(item2);
-                    o[item1] = item2;
-                    o[item2] = item1;
-                }
-            }
-        }
-        for (let item of stuff) {
-            item.updatePos();
-        }
-    }
-
-    const strToVec = (str)=> new Vector2(...(str.replace(/[^0-9,.]/g, "").split(",").map((item)=>parseFloat(item))
-    ))
-    const makeBall = (posRef, velRef, massRef, radiusRef, colorRef, nameRef, nameColorRef) => {
-        //.map((item)=>parseFloat(item))
-        
-        stuff.push(new GravityBall(strToVec(posRef),strToVec( velRef), parseFloat(massRef), parseFloat(radiusRef), colorRef, nameRef, nameColorRef));
-        print(stuff)
-    }
-    return (
-        <div className="container">
-            <div className="menuGroup">
-                <div className="buttonGroup">
-                    <Button variant="outlined" onClick={() => {
-                        stuff.length = 0;
-                    }}>Clear</Button>
-                    <AddObjDialog onFinish={makeBall} />
-
-                </div>
-            </div>
-            <div className="canvas">
-                <Canvas objs={stuff} updateCallback={update} props={{ height: 2000, width: 2000 }} />
-            </div>
-        </div>
-    );
+/**
+ * Callbacks returning void, like event listeners.
+ *
+ * TODO: move those to event-based systems
+ */
+type EventLikeCallbackSignatures = {
+	'afterActivateUser': (user: IUser) => void;
+	'afterCreateChannel': (owner: IUser, room: IRoom) => void;
+	'afterCreatePrivateGroup': (owner: IUser, room: IRoom) => void;
+	'afterDeactivateUser': (user: IUser) => void;
+	'afterDeleteMessage': (message: IMessage, room: IRoom) => void;
+	'validateUserRoles': (userData: Partial<IUser>) => void;
+	'workspaceLicenseChanged': (license: string) => void;
+	'afterReadMessages': (rid: IRoom['_id'], params: { uid: IUser['_id']; lastSeen: Date }) => void;
+	'beforeReadMessages': (rid: IRoom['_id'], uid: IUser['_id']) => void;
+	'afterDeleteUser': (user: IUser) => void;
+	'afterFileUpload': (params: { user: IUser; room: IRoom; message: IMessage }) => void;
+	'afterSaveMessage': (message: IMessage, room: IRoom, uid: string) => void;
+	'livechat.removeAgentDepartment': (params: { departmentId: ILivechatDepartmentRecord['_id']; agentsId: ILivechatAgent['_id'][] }) => void;
+	'livechat.saveAgentDepartment': (params: { departmentId: ILivechatDepartmentRecord['_id']; agentsId: ILivechatAgent['_id'][] }) => void;
+	'livechat.closeRoom': (room: IRoom) => void;
+	'livechat.saveRoom': (room: IRoom) => void;
+	'livechat:afterReturnRoomAsInquiry': (params: { room: IRoom }) => void;
+	'livechat.setUserStatusLivechat': (params: { userId: IUser['_id']; status: OmnichannelAgentStatus }) => void;
+	'livechat.agentStatusChanged': (params: { userId: IUser['_id']; status: OmnichannelAgentStatus }) => void;
+	'livechat.afterTakeInquiry': (inq: ILivechatInquiryRecord, agent: ILivechatAgent) => void;
+	'afterAddedToRoom': (params: { user: IUser; inviter: IUser }, room: IRoom) => void;
+	'beforeAddedToRoom': (params: { user: IUser; inviter: IUser }) => void;
+	'afterCreateDirectRoom': (params: IRoom, second: { members: IUser[]; creatorId: IUser['_id'] }) => void;
+	'beforeDeleteRoom': (params: IRoom) => void;
+	'beforeJoinDefaultChannels': (user: IUser) => void;
+	'beforeCreateChannel': (owner: IUser, room: IRoom) => void;
+	'afterCreateRoom': (owner: IUser, room: IRoom) => void;
+	'onValidateLogin': (login: ILoginAttempt) => void;
+	'federation.afterCreateFederatedRoom': (room: IRoom, second: { owner: IUser; originalMemberList: string[] }) => void;
+	'beforeCreateDirectRoom': (members: IUser[]) => void;
+	'federation.beforeCreateDirectMessage': (members: IUser[]) => void;
+	'afterSetReaction': (message: IMessage, { user, reaction }: { user: IUser; reaction: string; shouldReact: boolean }) => void;
+	'afterUnsetReaction': (
+		message: IMessage,
+		{ user, reaction }: { user: IUser; reaction: string; shouldReact: boolean; oldMessage: IMessage },
+	) => void;
+	'federation.beforeAddUserAToRoom': (params: { user: IUser | string; inviter: IUser }, room: IRoom) => void;
+	'onJoinVideoConference': (callId: VideoConference['_id'], userId?: IUser['_id']) => Promise<void>;
+	'usernameSet': () => float;
 };
 
+/**
+ * Callbacks that are supposed to be composed like a chain.
+ *
+ * TODO: develop a middleware alternative and grant independence of execution order
+ */
+type ChainedCallbackSignatures = {
+	'beforeSaveMessage': (message: IMessage, room?: IRoom) => IMessage;
+	'afterCreateUser': (user: IUser) => IUser;
+	'afterDeleteRoom': (rid: IRoom['_id']) => IRoom['_id'];
+	'livechat:afterOnHold': (room: IRoom) => IRoom;
+	'livechat:afterOnHoldChatResumed': (room: IRoom) => IRoom;
+	'livechat:onTransferFailure': (params: { room: IRoom; guest: ILivechatVisitor; transferData: { [k: string]: string | any } }) => {
+		room: IRoom;
+		guest: ILivechatVisitor;
+		transferData: { [k: string]: string | any };
+	};
+	'livechat.afterForwardChatToAgent': (params: { rid: IRoom['_id']; servedBy: unknown; oldServedBy: unknown }) => {
+		rid: IRoom['_id'];
+		servedBy: unknown;
+		oldServedBy: unknown;
+	};
+	'livechat.afterForwardChatToDepartment': (params: {
+		rid: IRoom['_id'];
+		newDepartmentId: ILivechatDepartmentRecord['_id'];
+		oldDepartmentId: ILivechatDepartmentRecord['_id'];
+	}) => {
+		rid: IRoom['_id'];
+		newDepartmentId: ILivechatDepartmentRecord['_id'];
+		oldDepartmentId: ILivechatDepartmentRecord['_id'];
+	};
+	'livechat.afterInquiryQueued': (inquiry: ILivechatInquiryRecord) => ILivechatInquiryRecord;
+	'livechat.afterRemoveDepartment': (params: { departmentId: ILivechatDepartmentRecord['_id']; agentsId: ILivechatAgent['_id'][] }) => {
+		departmentId: ILivechatDepartmentRecord['_id'];
+		agentsId: ILivechatAgent['_id'][];
+	};
+	'livechat.applySimultaneousChatRestrictions': (_: undefined, params: { departmentId?: ILivechatDepartmentRecord['_id'] }) => undefined;
+	'livechat.beforeCloseRoom': (params: { room: IRoom; options: unknown }) => { room: IRoom; options: unknown };
+	'livechat.beforeDelegateAgent': (agent: ILivechatAgent, params: { department?: ILivechatDepartmentRecord }) => ILivechatAgent | null;
+	'livechat.applyDepartmentRestrictions': (
+		query: FilterOperators<ILivechatDepartmentRecord>,
+		params: { userId: IUser['_id'] },
+	) => FilterOperators<ILivechatDepartmentRecord>;
+	'livechat.onMaxNumberSimultaneousChatsReached': (inquiry: ILivechatInquiryRecord) => ILivechatInquiryRecord;
+	'on-business-hour-start': (params: { BusinessHourBehaviorClass: { new (): IBusinessHourBehavior } }) => {
+		BusinessHourBehaviorClass: { new (): IBusinessHourBehavior };
+	};
+	'renderMessage': <T extends IMessage & { html: string }>(message: T) => T;
+	'oembed:beforeGetUrlContent': (data: {
+		urlObj: Omit<Url.UrlWithParsedQuery, 'host' | 'search'> & { host?: unknown; search?: unknown };
+		parsedUrl: ParsedUrl;
+	}) => {
+		urlObj: Url.UrlWithParsedQuery;
+		parsedUrl: ParsedUrl;
+	};
+	'oembed:afterParseContent': (data: {
+		url: string;
+		meta: OEmbedMeta;
+		headers: { [k: string]: string };
+		parsedUrl: ParsedUrl;
+		content: OEmbedUrlContent;
+	}) => {
+		url: string;
+		meta: OEmbedMeta;
+		headers: { [k: string]: string };
+		parsedUrl: ParsedUrl;
+		content: OEmbedUrlContent;
+	};
+};
+type Hook =
+	| keyof EventLikeCallbackSignatures
+	| keyof ChainedCallbackSignatures
+	| 'afterJoinRoom'
+	| 'afterLeaveRoom'
+	| 'afterLogoutCleanUp'
+	| 'afterProcessOAuthUser'
+	| 'afterRemoveFromRoom'
+	| 'afterRoomArchived'
+	| 'afterRoomNameChange'
+	| 'afterRoomTopicChange'
+	| 'afterSaveUser'
+	| 'afterValidateLogin'
+	| 'afterValidateNewOAuthUser'
+	| 'archiveRoom'
+	| 'beforeActivateUser'
+	| 'beforeCreateRoom'
+	| 'beforeCreateUser'
+	| 'beforeGetMentions'
+	| 'beforeJoinRoom'
+	| 'beforeLeaveRoom'
+	| 'beforeReadMessages'
+	| 'beforeRemoveFromRoom'
+	| 'beforeSaveMessage'
+	| 'beforeSendMessageNotifications'
+	| 'beforeValidateLogin'
+	| 'cachedCollection-loadFromServer-rooms'
+	| 'cachedCollection-loadFromServer-subscriptions'
+	| 'cachedCollection-received-rooms'
+	| 'cachedCollection-received-subscriptions'
+	| 'cachedCollection-sync-rooms'
+	| 'cachedCollection-sync-subscriptions'
+	| 'enter-room'
+	| 'livechat.beforeForwardRoomToDepartment'
+	| 'livechat.beforeInquiry'
+	| 'livechat.beforeListTags'
+	| 'livechat.beforeRoom'
+	| 'livechat.beforeRouteChat'
+	| 'livechat.chatQueued'
+	| 'livechat.checkAgentBeforeTakeInquiry'
+	| 'livechat.checkDefaultAgentOnNewRoom'
+	| 'livechat.closeRoom'
+	| 'livechat.leadCapture'
+	| 'livechat.newRoom'
+	| 'livechat.offlineMessage'
+	| 'livechat.onAgentAssignmentFailed'
+	| 'livechat.onCheckRoomApiParams'
+	| 'livechat.onLoadConfigApi'
+	| 'livechat.onLoadForwardDepartmentRestrictions'
+	| 'livechat.saveInfo'
+	| 'loginPageStateChange'
+	| 'mapLDAPUserData'
+	| 'onCreateUser'
+	| 'onLDAPLogin'
+	| 'onValidateLogin'
+	| 'openBroadcast'
+	| 'renderNotification'
+	| 'roomAnnouncementChanged'
+	| 'roomAvatarChanged'
+	| 'roomNameChanged'
+	| 'roomTopicChanged'
+	| 'roomTypeChanged'
+	| 'setReaction'
+	| 'streamMessage'
+	| 'streamNewMessage'
+	| 'unarchiveRoom'
+	| 'unsetReaction'
+	| 'userAvatarSet'
+	| 'userConfirmationEmailRequested'
+	| 'userForgotPasswordEmailRequested'
+	| 'usernameSet'
+	| 'userPasswordReset'
+	| 'userRegistered'
+	| 'userStatusManuallySet';
+
+type Callback = {
+	(item: unknown, constant?: unknown): unknown;
+	hook: Hook;
+	id: string;
+	priority: CallbackPriority;
+	stack: string;
+};
+
+type CallbackTracker = (callback: Callback) => () => void;
+
+type HookTracker = (params: { hook: Hook; length: number }) => () => void;
+
+class Callbacks {
+	private logger: Logger | undefined = undefined;
+
+	private trackCallback: CallbackTracker | undefined = undefined;
+
+	private trackHook: HookTracker | undefined = undefined;
+
+	private callbacks = new Map<Hook, Callback[]>();
+
+	private sequentialRunners = new Map<Hook, (item: unknown, constant?: unknown) => unknown>();
+
+	private asyncRunners = new Map<Hook, (item: unknown, constant?: unknown) => unknown>();
+
+	readonly priority = CallbackPriority;
+
+	setLogger(logger: Logger): void {
+		this.logger = logger;
+	}
+
+	setMetricsTrackers({ trackCallback, trackHook }: { trackCallback?: CallbackTracker; trackHook?: HookTracker }): void {
+		this.trackCallback = trackCallback;
+		this.trackHook = trackHook;
+	}
+
+	private runOne(callback: Callback, item: unknown, constant: unknown): unknown {
+		const stopTracking = this.trackCallback?.(callback);
+
+		try {
+			return callback(item, constant);
+		} finally {
+			stopTracking?.();
+		}
+	}
+
+	private createSequentialRunner(hook: Hook, callbacks: Callback[]): (item: unknown, constant?: unknown) => unknown {
+		const wrapCallback =
+			(callback: Callback) =>
+			(item: unknown, constant?: unknown): unknown => {
+				this.logger?.debug(`Executing callback with id ${callback.id} for hook ${callback.hook}`);
+
+				return this.runOne(callback, item, constant) ?? item;
+			};
+
+		const identity = <TItem>(item: TItem): TItem => item;
+
+		const pipe =
+			(curr: (item: unknown, constant?: unknown) => unknown, next: (item: unknown, constant?: unknown) => unknown) =>
+			(item: unknown, constant?: unknown): unknown =>
+				next(curr(item, constant), constant);
+
+		const fn = callbacks.map(wrapCallback).reduce(pipe, identity);
+
+		return (item: unknown, constant?: unknown): unknown => {
+			const stopTracking = this.trackHook?.({ hook, length: callbacks.length });
+
+			try {
+				return fn(item, constant);
+			} finally {
+				stopTracking?.();
+			}
+		};
+	}
+
+	private createAsyncRunner(_: Hook, callbacks: Callback[]) {
+		return (item: unknown, constant?: unknown): unknown => {
+			if (typeof window !== 'undefined') {
+				throw new Error('callbacks.runAsync on client server not allowed');
+			}
+
+			for (const callback of callbacks) {
+				Meteor.defer(() => {
+					this.runOne(callback, item, constant);
+				});
+			}
+
+			return item;
+		};
+	}
+
+	getCallbacks(hook: Hook): Callback[] {
+		return this.callbacks.get(hook) ?? [];
+	}
+
+	setCallbacks(hook: Hook, callbacks: Callback[]): void {
+	
+		this.callbacks.set(hook, callbacks);
+		this.sequentialRunners.set(hook, this.createSequentialRunner(hook, callbacks));
+		this.asyncRunners.set(hook, this.createAsyncRunner(hook, callbacks));
+	}
+
+	/**
+	 * Add a callback function to a hook
+	 *
+	 * @param hook the name of the hook
+	 * @param callback the callback function
+	 * @param priority the callback run priority (order)
+	 * @param id human friendly name for this callback
+	 */
+	add<THook extends keyof EventLikeCallbackSignatures>(
+		hook: THook,
+		callback: EventLikeCallbackSignatures[THook],
+		priority?: CallbackPriority,
+		id?: string,
+	): void;
+
+	add<THook extends keyof ChainedCallbackSignatures>(
+		hook: THook,
+		callback: ChainedCallbackSignatures[THook],
+		priority?: CallbackPriority,
+		id?: string,
+	): void;
+
+	add<TItem, TConstant, TNextItem = TItem>(
+		hook: Hook,
+		callback: (item: TItem, constant?: TConstant) => TNextItem,
+		priority?: CallbackPriority,
+		id?: string,
+	): void;
+
+	add(hook: Hook, callback: (item: unknown, constant?: unknown) => unknown, priority = this.priority.MEDIUM, id = getRandomId()): void {
+		const callbacks = this.getCallbacks(hook);
+
+		if (callbacks.some((cb) => cb.id === id)) {
+			return;
+		}
+
+		callbacks.push(
+			Object.assign(callback as Callback, {
+				hook,
+				priority,
+				id,
+				stack: new Error().stack,
+			}),
+		);
+		callbacks.sort(compareByRanking((callback: Callback): number => callback.priority ?? this.priority.MEDIUM));
+
+		this.setCallbacks(hook, callbacks);
+	}
+
+	/**
+	 * Remove a callback from a hook
+	 *
+	 * @param hook the name of the hook
+	 * @param id the callback's id
+	 */
+	remove(hook: Hook, id: string): void {
+		const hooks = this.getCallbacks(hook).filter((callback) => callback.id !== id);
+		this.setCallbacks(hook, hooks);
+	}
+
+	const s = `
+	
+	asdas
+	
+	asdasd
+	as
+	`
+
+	/**
+	 * Successively run all of a hook's callbacks on an item
+	 *
+	 * @param hook the name of the hook
+	 * @param item the post, comment, modifier, etc. on which to run the callbacks
+	 * @param constant an optional constant that will be passed along to each callback
+	 * @returns returns the item after it's been through all the callbacks for this hook
+	 */
+	run<THook extends keyof EventLikeCallbackSignatures>(hook: THook, ...args: Parameters<EventLikeCallbackSignatures[THook]>): void;
+
+	run<THook extends keyof ChainedCallbackSignatures>(
+		hook: THook,
+		...args: Parameters<ChainedCallbackSignatures[THook]>
+	): ReturnType<ChainedCallbackSignatures[THook]>;
+
+	run<TItem, TConstant, TNextItem = TItem>(hook: Hook, item: TItem, constant?: TConstant): TNextItem;
+
+	run(hook: Hook, item: unknown, constant?: unknown): unknown {
+		const runner = this.sequentialRunners.get(hook) ?? ((item: unknown, _constant?: unknown): unknown => item);
+		return runner(item, constant);
+	}
+
+	/**
+	 * Successively run all of a hook's callbacks on an item, in async mode (only works on server)
+	 *
+	 * @param hook the name of the hook
+	 * @param item the post, comment, modifier, etc. on which to run the callbacks
+	 * @param constant an optional constant that will be passed along to each callback
+	 * @returns the post, comment, modifier, etc. on which to run the callbacks
+	 */
+	runAsync<THook extends keyof EventLikeCallbackSignatures>(hook: THook, ...args: Parameters<EventLikeCallbackSignatures[THook]>): void;
+
+	runAsync(hook: Hook, item: unknown, constant?: unknown): unknown {
+		const runner = this.asyncRunners.get(hook) ?? ((item: unknown, _constant?: unknown): unknown => item);
+		return runner(item, constant);
+	}
+}
+
+/**
+ * Callback hooks provide an easy way to add extra steps to common operations.
+ * @deprecated
+ */
 
 
-
-
-// ========================================
-
-ReactDOM.render(
-    <Parent />,
-    document.getElementById('root')
-);
+class stuff{
+	@Event
+}
+export const callbacks = new Callbacks();
 ```
 
 * remeber to never let i go out of bound!
