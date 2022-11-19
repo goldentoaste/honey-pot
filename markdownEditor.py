@@ -18,8 +18,6 @@ from utils import cacheLocation, mdCodeBlockRegex, mdImageRegex
 copyCommand = "copy" if os.name == "nt" else "cp"  # copy for windows, cp for unix systems
 backSlash = "\\"
 
-imageLocations = CacheManager(r"D:\PythonProject\stickyMarkdown\testCache", 5)
-
 
 def cleanSlash(d: str):
     """
@@ -34,7 +32,7 @@ class MarkdownPreview(QTextBrowser):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.cache = CacheManager(r"D:\PythonProject\stickyMarkdown\testCache", 5)
+        self.cache = CacheManager(r"C:\\Testing\\cache", 5)
         self.blockTypes = []  # python, text, etc
         self.allBlockTypes = {
             "python": Languages.python,

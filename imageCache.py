@@ -19,7 +19,8 @@ class CacheManager:
         self.folder = cacheFolder
         self.cacheSize = cacheSize
         if not os.path.isdir(self.folder):
-            os.mkdir(self.folder)
+            os.makedirs(self.folder)
+
         self.images: Dict[str, str] = {}  # paths to images
 
         # get .bmp, .jpg, or .png files in the cache folder, sorted by last modified date
