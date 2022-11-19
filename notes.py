@@ -13,7 +13,7 @@ from PySide6.QtWidgets import QApplication, QFrame, QWidget
 from GUI.noteGUI import Ui_Note
 from imageCache import CacheManager
 from utils import getResource
-
+import sys
 user32 = ctypes.windll.user32
 
 updateInterval = 1
@@ -271,6 +271,9 @@ class Note(Ui_Note, ScaleableWindowFrame):
         ignoreEdgeDrag(self.frame_2, self, ignoreMargin)
         ignoreEdgeDrag(self.editLabel, self, ignoreMargin)
         ignoreEdgeDrag(self.previewLabel, self, ignoreMargin)
+        ignoreEdgeDrag(self.splitter, self, ignoreMargin)
+        ignoreEdgeDrag(self.preview, self, ignoreMargin)
+        ignoreEdgeDrag(self.editor, self, ignoreMargin)
         # x = (ignoreHover(item) for item in (self.pinButton, self.newNoteButton, self.editButton, self.minimizeButton, self.closeButton, self.frame))
 
     def setupStyles(self):
@@ -288,7 +291,7 @@ class Note(Ui_Note, ScaleableWindowFrame):
         self.editor.setFont(self.editorFont)
 
         metric = QFontMetrics(self.editorFont)
-        self.editor.setTabStopDistance(metric.maxWidth())
+        self.editor.setTabStopDistance(metric.horizontalAdvance("    "))
 
         # button icons
         self.pinIcon = QIcon(QPixmap(getResource("GUI\\pin.svg")))
@@ -481,13 +484,26 @@ class NoteUpdateThread(QThread):
 
 
 if __name__ == "__main__":
-    import sys
+
 
     app = QApplication(sys.argv)
 
     n = Note(
-        r"D:\PythonProject\stickyMarkdown\test.md", CacheManager(r"D:\PythonProject\stickyMarkdown\testCache", 5), "",
+        r"C:\Testing\test.md", CacheManager(r"C:\Testing\cache", 5), "",
     )
     n.show()
 
     sys.exit(app.exec_())
+
+
+# if __name__ == "__main__":
+#     import sys
+
+#     app = QApplication(sys.argv)
+
+#     n = Note(
+#         r"D:\PythonProject\stickyMarkdown\test.md", CacheManager(r"D:\PythonProject\stickyMarkdown\testCache", 5), "",
+#     )
+#     n.show()
+
+#     sys.exit(app.exec_())

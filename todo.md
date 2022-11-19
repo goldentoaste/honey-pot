@@ -51,3 +51,8 @@
         + `brain` etc
         
         sdsaadsad
+
+```
+build
+nuitka notes.py --standalone --enable-plugin=pyside6 --onefile --windows-disable-console     
+```

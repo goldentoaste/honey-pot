@@ -10,7 +10,9 @@ from PySide6.QtCore import (QEvent, QMargins, QPoint, QRect, QSizeF, Qt, QThread
 from PySide6.QtGui import (QFont, QFontDatabase, QFontMetrics, QIcon, QImage,
                          QMouseEvent, QPixmap, QTextBlock, QTextDocument)
 from PySide6.QtWidgets import QApplication, QFrame, QWidget
-
+    
+	
+				
 from GUI.noteGUI import Ui_Note
 from imageCache import CacheManager
 from utils import getResource
