@@ -23,6 +23,9 @@ def getResource(relative_path):
     return os.path.join(base_path, relative_path)
 
 
+def getPath(relativePath):
+    return os.path.join(os.path.dirname(__file__), relativePath)
+
 if __name__ == "__main__":
     print("testing stuff in utils")
 

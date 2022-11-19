@@ -12,7 +12,7 @@ from PySide6.QtWidgets import QApplication, QFrame, QWidget
 
 from GUI.noteGUI import Ui_Note
 from imageCache import CacheManager
-from utils import getResource
+from utils import getResource, getPath
 import sys
 user32 = ctypes.windll.user32
 
@@ -28,10 +28,12 @@ right = 3
 c = Qt.CursorShape
 
 
+
+
 class ScaleableWindowFrame(QWidget):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-
+        
         self.setMouseTracking(True)
         self.prevDir = (None, None)
         self.lastPos: QPoint = None
@@ -272,13 +274,13 @@ class Note(Ui_Note, ScaleableWindowFrame):
         ignoreEdgeDrag(self.editLabel, self, ignoreMargin)
         ignoreEdgeDrag(self.previewLabel, self, ignoreMargin)
         ignoreEdgeDrag(self.splitter, self, ignoreMargin)
-        ignoreEdgeDrag(self.preview, self, ignoreMargin)
-        ignoreEdgeDrag(self.editor, self, ignoreMargin)
+        # ignoreEdgeDrag(self.preview, self, ignoreMargin)
+        # ignoreEdgeDrag(self.editor, self, ignoreMargin)
         # x = (ignoreHover(item) for item in (self.pinButton, self.newNoteButton, self.editButton, self.minimizeButton, self.closeButton, self.frame))
 
     def setupStyles(self):
         # fonts stuff
-        QFontDatabase.addApplicationFont(r"GUI/Roboto-Regular.ttf")
+        QFontDatabase.addApplicationFont(r"..\\GUI\\Roboto-Regular.ttf")
         font = QFont()
         font.setFamily("Roboto")
 
@@ -294,14 +296,14 @@ class Note(Ui_Note, ScaleableWindowFrame):
         self.editor.setTabStopDistance(metric.horizontalAdvance("    "))
 
         # button icons
-        self.pinIcon = QIcon(QPixmap(getResource("GUI\\pin.svg")))
-        self.filledPinIcon = QIcon(QPixmap(getResource("GUI\\pinFilled.svg")))
+        self.pinIcon = QIcon(QPixmap(getPath("GUI\\pin.svg")))
+        self.filledPinIcon = QIcon(QPixmap(getPath("GUI\\pinFilled.svg")))
 
         self.pinButton.setIcon(self.pinIcon)
-        self.newNoteButton.setIcon(QIcon(QPixmap(getResource("GUI\\add.svg"))))
-        self.editButton.setIcon(QIcon(QPixmap(getResource("GUI\\edit.svg"))))
-        self.minimizeButton.setIcon(QIcon(QPixmap(getResource("GUI\\minimize.svg"))))
-        self.closeButton.setIcon(QIcon(QPixmap(getResource("GUI\\close.svg"))))
+        self.newNoteButton.setIcon(QIcon(QPixmap(getPath("GUI\\add.svg"))))
+        self.editButton.setIcon(QIcon(QPixmap(getPath("GUI\\edit.svg"))))
+        self.minimizeButton.setIcon(QIcon(QPixmap(getPath("GUI\\minimize.svg"))))
+        self.closeButton.setIcon(QIcon(QPixmap(getPath("GUI\\close.svg"))))
 
         self.pinButton.clicked.connect(self.togglePin)
         self.editButton.clicked.connect(self.toggleEdit)
@@ -484,16 +486,13 @@ class NoteUpdateThread(QThread):
 
 
 if __name__ == "__main__":
-
-
     app = QApplication(sys.argv)
-
     n = Note(
         r"C:\Testing\test.md", CacheManager(r"C:\Testing\cache", 5), "",
     )
     n.show()
 
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 
 # if __name__ == "__main__":

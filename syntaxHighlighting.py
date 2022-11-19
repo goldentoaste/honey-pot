@@ -135,10 +135,10 @@ class EditorHighlighter(QSyntaxHighlighter):
         self.errorColor = QTextCharFormat()
         self.errorColor.setBackground(QColor(234, 105, 98, 100))
         self.indentColors = [
-          QTextCharFormat(),
-          QTextCharFormat(),
-          QTextCharFormat(),
-          QTextCharFormat(),
+            QTextCharFormat(),
+            QTextCharFormat(),
+            QTextCharFormat(),
+            QTextCharFormat(),
         ]
         
         for f,c in zip(self.indentColors,(  QColor(216, 166, 87, 100),
@@ -154,7 +154,7 @@ class EditorHighlighter(QSyntaxHighlighter):
 
         self.bold = QTextCharFormat()
         self.bold.setFont(codeFont)
-        self.bold.setFontWeight(75)  # 75 is bold
+        self.bold.setFontWeight(QFont.Weight.Bold)  # 75 is bold
 
         self.italic = QTextCharFormat()
         self.italic.setFont(codeFont)
@@ -162,7 +162,7 @@ class EditorHighlighter(QSyntaxHighlighter):
 
         self.boldItalic = QTextCharFormat()
         self.boldItalic.setFont(codeFont)
-        self.boldItalic.setFontWeight(75)
+        self.boldItalic.setFontWeight(QFont.Weight.Bold)
         self.boldItalic.setFontItalic(True)
 
         mdGenericPatterns = (
@@ -191,7 +191,7 @@ class EditorHighlighter(QSyntaxHighlighter):
         self.codeblockLangPattern = QRegularExpression(r"txt|text|python|py|js|javascript|ts|typescipt")
         self.codeBlockEndPattern = QRegularExpression(r"```\s*$", reflags.MultilineOption)
         self.indentRegex = QRegularExpression(r"^\s+", reflags.MultilineOption)
-        self.newLineRegex = QRegularExpression(r"\s\s$", reflags.MultilineOption)
+        self.newLineRegex = QRegularExpression(r"  $", reflags.MultilineOption)
         self.codeStartIndex = 0
         
         
