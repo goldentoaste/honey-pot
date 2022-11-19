@@ -54,5 +54,5 @@
 
 ```
 build
-nuitka notes.py --standalone --enable-plugin=pyside6 --onefile --windows-disable-console     
+nuitka notes.py  --enable-plugin=pyside6 --onefile --standalone  --include-data-dir=GUI=GUI  --windows-disable-console
 ```

@@ -66,7 +66,7 @@ class MarkdownPreview(QTextBrowser):
             block = textwrap.indent(html.escape(block).strip("\n").replace("\\", "\\\\"), "    ")
             print(self.langHeaderMap[langType].encode("utf8"))
             markdown = mdCodeBlockRegex.sub(
-                f'<pre style="background-color:#292828;color:#d4be98">\n<p1 style="font-size: 10pt; font-family: Cascadia Code; ">\n\n{self.langHeaderMap[langType]}{block}\u200c\n</p1></pre>',
+                f'<pre style="background-color:#292828;color:#d4be98;">\n<p1 style="font-size: 10pt; font-family: Comic Sans MS; ">\n\n{self.langHeaderMap[langType]}{block}\u200c\n</p1></pre>',
                 markdown,
                 1,
             )
