@@ -7,13 +7,16 @@ from random import randint
 from time import time
 from typing import List
 
-from PySide6.QtCore import QMimeData, QSize, QUrl, Signal
+from PySide6.QtCore import QMimeData, QSize, QUrl, Signal, Qt
 from PySide6.QtGui import QImage
 from PySide6.QtWidgets import QTextBrowser, QTextEdit
 
 from imageCache import CacheManager
 from syntaxHighlighting import EditorHighlighter, Languages, PreviewHighlighter
 from utils import cacheLocation, mdCodeBlockRegex, mdImageRegex
+from transparentScrollbar import TransScrollBar
+
+
 
 copyCommand = "copy" if os.name == "nt" else "cp"  # copy for windows, cp for unix systems
 backSlash = "\\"
@@ -51,7 +54,30 @@ class MarkdownPreview(QTextBrowser):
 
         self.highlighter = PreviewHighlighter(self.document())
         self.document().setIndentWidth(20)
+        
+        
+        # Set style
+        
+        self.setStyleSheet(
+            '''
+            QTextEdit{border:1px solid #000000;}
+            '''
+        )
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        
+        
+        print(self.parent())
+        self.scrollbar = TransScrollBar(self.parent())
+        
+    
+    # def enterEvent(self, event) -> None:
+    #     self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+    #     self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
 
+    # def leaveEvent(self, event) -> None:
+    #     self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    #     self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     def setMarkdown(self, markdown: str) -> None:
         # fixing code blocks
         "========================================================"

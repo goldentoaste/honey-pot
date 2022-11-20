@@ -1,4 +1,4 @@
-```py
+```
 import ctypes
 import os
 from threading import Thread
@@ -519,15 +519,12 @@ if __name__ == "__main__":
     import sys
 
     app = QApplication(sys.argv)
- ssssss
     n = Note(
         r"D:\PythonProject\stickyMarkdown\test.md",
         CacheManager(r"D:\PythonProject\stickyMarkdown\testCache", 5),
         "",
     )
     n.show()
-    
-
     sys.exit(app.exec_())
 
 ```

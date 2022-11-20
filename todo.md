@@ -36,12 +36,9 @@
         - generate type hinting file in a meta class to type hint for a default schema layout
 
 
-* additional markdown syntax highlights
-    - ~~highight double space at the end of line to indicate line break~~
-    - ~~highlight `\n` on its own line, also linebreak~~ (will ignore for now)
-    - ~~highlight tab indents at the beginning~~
+* bug fix: remove tabs from end of line highlight
 
-* add emoji support
+* add emoji support (way later)
     - should respect escaped `\:`
     - cast common emoji like `:/ :) :( ;-;` etc to a unicode emoji, (should be an setting boolean to disable)
     - should show a auto complete widget when typing starting with `:`

@@ -125,15 +125,12 @@ class Ui_Note(object):
         self.frame_2.setObjectName(u"frame_2")
         self.frame_2.setFrameShape(QFrame.StyledPanel)
         self.frame_2.setFrameShadow(QFrame.Raised)
-        self.horizontalLayout_4 = QHBoxLayout(self.frame_2)
-        self.horizontalLayout_4.setSpacing(0)
-        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
-        self.horizontalLayout_4.setContentsMargins(5, 0, 5, 5)
+        self.horizontalLayout_5 = QHBoxLayout(self.frame_2)
+        self.horizontalLayout_5.setSpacing(0)
+        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
+        self.horizontalLayout_5.setContentsMargins(6, 0, 6, 6)
         self.splitter = QSplitter(self.frame_2)
         self.splitter.setObjectName(u"splitter")
-        self.splitter.setStyleSheet(u"QSplitter::handle{\n"
-"	border: 1px solid black;\n"
-"}")
         self.splitter.setOrientation(Qt.Horizontal)
         self.verticalLayoutWidget_2 = QWidget(self.splitter)
         self.verticalLayoutWidget_2.setObjectName(u"verticalLayoutWidget_2")
@@ -150,14 +147,24 @@ class Ui_Note(object):
 
         self.editorLayout.addWidget(self.editLabel)
 
-        self.editor = MarkdownEditor(self.verticalLayoutWidget_2)
+        self.editorHolder = QWidget(self.verticalLayoutWidget_2)
+        self.editorHolder.setObjectName(u"editorHolder")
+        self.horizontalLayout_4 = QHBoxLayout(self.editorHolder)
+        self.horizontalLayout_4.setSpacing(0)
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.horizontalLayout_4.setContentsMargins(0, 0, 0, 0)
+        self.editor = MarkdownEditor(self.editorHolder)
         self.editor.setObjectName(u"editor")
         self.editor.setStyleSheet(u"QTextEdit, QTextBrowser{\n"
 "\n"
 "border:1px solid #000000;\n"
 "}")
+        self.editor.setSizeAdjustPolicy(QAbstractScrollArea.AdjustIgnored)
 
-        self.editorLayout.addWidget(self.editor)
+        self.horizontalLayout_4.addWidget(self.editor)
+
+
+        self.editorLayout.addWidget(self.editorHolder)
 
         self.splitter.addWidget(self.verticalLayoutWidget_2)
         self.verticalLayoutWidget = QWidget(self.splitter)
@@ -172,23 +179,28 @@ class Ui_Note(object):
 
         self.previewLayout.addWidget(self.previewLabel)
 
-        self.preview = MarkdownPreview(self.verticalLayoutWidget)
+        self.previewHolder = QWidget(self.verticalLayoutWidget)
+        self.previewHolder.setObjectName(u"previewHolder")
+        self.horizontalLayout_2 = QHBoxLayout(self.previewHolder)
+        self.horizontalLayout_2.setSpacing(0)
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.preview = MarkdownPreview(self.previewHolder)
         self.preview.setObjectName(u"preview")
-        self.preview.setStyleSheet(u"QTextEdit{\n"
-"\n"
-"border:1px solid #000000;\n"
-"}")
-        self.preview.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.preview.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.preview.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.preview.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.preview.setSizeAdjustPolicy(QAbstractScrollArea.AdjustIgnored)
         self.preview.setSearchPaths([])
         self.preview.setOpenExternalLinks(True)
 
-        self.previewLayout.addWidget(self.preview)
+        self.horizontalLayout_2.addWidget(self.preview)
+
+
+        self.previewLayout.addWidget(self.previewHolder)
 
         self.splitter.addWidget(self.verticalLayoutWidget)
 
-        self.horizontalLayout_4.addWidget(self.splitter)
+        self.horizontalLayout_5.addWidget(self.splitter)
 
 
         self.verticalLayout.addWidget(self.frame_2)
@@ -208,5 +220,10 @@ class Ui_Note(object):
         self.closeButton.setText("")
         self.editLabel.setText(QCoreApplication.translate("Note", u"Edit Markdown", None))
         self.previewLabel.setText(QCoreApplication.translate("Note", u"Preview", None))
+        self.preview.setHtml(QCoreApplication.translate("Note", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Segoe UI'; font-size:9pt;\"><br /></p></body></html>", None))
     # retranslateUi
 

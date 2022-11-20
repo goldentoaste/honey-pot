@@ -4,9 +4,9 @@ from threading import Thread
 from time import sleep, time
 from typing import Dict, Literal, Tuple
 
-from PySide6.QtCore import (QEvent, QMargins, QPoint, QRect, QSizeF, Qt,
+from PySide6.QtCore import (QEvent, QMargins, QPoint, QRect, QSizeF, Qt, 
                             QThread, QUrl, Signal)
-from PySide6.QtGui import (QFont, QFontDatabase, QFontMetrics, QIcon, QImage,
+from PySide6.QtGui import (QFont, QFontDatabase, QFontMetrics, QIcon, QImage, QCursor,
                            QMouseEvent, QPixmap, QTextBlock, QTextDocument)
 from PySide6.QtWidgets import QApplication, QFrame, QWidget
 
@@ -214,6 +214,19 @@ def ignoreEdgeDrag(target: QWidget, parent: ScaleableWindowFrame, borderSize: in
     target.mouseReleaseEvent = makeReplacementEvent(eventType="release")
 
 
+def cursorResetZone(target : QWidget):
+    original = target.enterEvent
+    
+    
+    def resetCursor(a0):
+        target.setCursor(QCursor())
+        original(a0)
+    
+
+        
+    target.enterEvent = resetCursor
+
+
 def ignoreHover(ob: QWidget) -> QWidget:
     ob.setMouseTracking(True)
     evt = ob.mouseMoveEvent
@@ -273,7 +286,8 @@ class Note(Ui_Note, ScaleableWindowFrame):
         ignoreEdgeDrag(self.frame_2, self, ignoreMargin)
         ignoreEdgeDrag(self.editLabel, self, ignoreMargin)
         ignoreEdgeDrag(self.previewLabel, self, ignoreMargin)
-        ignoreEdgeDrag(self.splitter, self, ignoreMargin)
+
+        cursorResetZone(self.splitter)
         # ignoreEdgeDrag(self.preview, self, ignoreMargin)
         # ignoreEdgeDrag(self.editor, self, ignoreMargin)
         # x = (ignoreHover(item) for item in (self.pinButton, self.newNoteButton, self.editButton, self.minimizeButton, self.closeButton, self.frame))
@@ -442,7 +456,6 @@ class Note(Ui_Note, ScaleableWindowFrame):
 
 
 def makeFrameDraggable(frame: QFrame):
-
     frame.setMouseTracking(True)
     frame.offset = None
 
@@ -487,6 +500,8 @@ class NoteUpdateThread(QThread):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    
+    s = QWidget()
     n = Note(
         r"C:\Testing\test.md", CacheManager(r"C:\Testing\cache", 5), "",
     )
