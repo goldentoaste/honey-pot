@@ -12,17 +12,6 @@ mdImageRegex = re.compile(r"\!\[[^\[\]]+\]\(([^\(\)]+)\)")  # finds all the imag
 
 mdCodeBlockRegex = re.compile(r"```([\s\S]*?)```")
 
-
-def getResource(relative_path):
-    """Get absolute path to resource, works for dev and for PyInstaller"""
-    try:
-        base_path = sys._MEIPASS
-    
-    except AttributeError:
-        base_path = os.path.abspath(".")
-    return os.path.join(base_path, relative_path)
-
-
 def getPath(relativePath):
     return os.path.join(os.path.dirname(__file__), relativePath)
 

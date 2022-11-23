@@ -15,9 +15,9 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QAbstractScrollArea, QApplication, QFrame, QHBoxLayout,
-    QLabel, QPushButton, QSizePolicy, QSpacerItem,
-    QSplitter, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QFrame, QHBoxLayout, QLabel,
+    QPushButton, QSizePolicy, QSpacerItem, QSplitter,
+    QVBoxLayout, QWidget)
 
 from markdownEditor import (MarkdownEditor, MarkdownPreview)
 
@@ -159,7 +159,6 @@ class Ui_Note(object):
 "\n"
 "border:1px solid #000000;\n"
 "}")
-        self.editor.setSizeAdjustPolicy(QAbstractScrollArea.AdjustIgnored)
 
         self.horizontalLayout_4.addWidget(self.editor)
 
@@ -187,9 +186,6 @@ class Ui_Note(object):
         self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.preview = MarkdownPreview(self.previewHolder)
         self.preview.setObjectName(u"preview")
-        self.preview.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.preview.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.preview.setSizeAdjustPolicy(QAbstractScrollArea.AdjustIgnored)
         self.preview.setSearchPaths([])
         self.preview.setOpenExternalLinks(True)
 

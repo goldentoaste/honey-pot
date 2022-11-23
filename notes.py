@@ -12,9 +12,10 @@ from PySide6.QtWidgets import QApplication, QFrame, QWidget
 
 from GUI.noteGUI import Ui_Note
 from imageCache import CacheManager
-from utils import getResource, getPath
+from utils import  getPath
 import sys
 user32 = ctypes.windll.user32
+
 
 updateInterval = 1
 ignoreMargin = 10

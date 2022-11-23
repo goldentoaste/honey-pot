@@ -63,12 +63,10 @@ class MarkdownPreview(QTextBrowser):
             QTextEdit{border:1px solid #000000;}
             '''
         )
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+       
         
-        
-        print(self.parent())
-        self.scrollbar = TransScrollBar(self.parent())
+        self.vertScrollBar = TransScrollBar(Qt.Orientation.Vertical, self.parent(), self    )
+     
         
     
     # def enterEvent(self, event) -> None:
