@@ -9,7 +9,7 @@ from typing import List
 
 from PySide6.QtCore import QMimeData, QSize, QUrl, Signal, Qt
 from PySide6.QtGui import QImage
-from PySide6.QtWidgets import QTextBrowser, QTextEdit
+from PySide6.QtWidgets import QTextBrowser, QTextEdit, QPlainTextEdit
 
 from imageCache import CacheManager
 from syntaxHighlighting import EditorHighlighter, Languages, PreviewHighlighter
@@ -65,17 +65,10 @@ class MarkdownPreview(QTextBrowser):
         )
        
         
-        self.vertScrollBar = TransScrollBar(Qt.Orientation.Vertical, self.parent(), self    )
-     
+        self.vertScrollBar = TransScrollBar(Qt.Orientation.Vertical, self.parent(), self)
+        self.horScrollBar = TransScrollBar(Qt.Orientation.Horizontal, self.parent(), self)
         
-    
-    # def enterEvent(self, event) -> None:
-    #     self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-    #     self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-
-    # def leaveEvent(self, event) -> None:
-    #     self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-    #     self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        
     def setMarkdown(self, markdown: str) -> None:
         # fixing code blocks
         "========================================================"
@@ -88,7 +81,6 @@ class MarkdownPreview(QTextBrowser):
             langType = self.allBlockTypes.get(langHeader, Languages.text)
             block = block[block.find("\n") + 1 :]
             block = textwrap.indent(html.escape(block).strip("\n").replace("\\", "\\\\"), "    ")
-            print(self.langHeaderMap[langType].encode("utf8"))
             markdown = mdCodeBlockRegex.sub(
                 f'<pre style="background-color:#292828;color:#d4be98;">\n<p1 style="font-size: 10pt; font-family: Comic Sans MS; ">\n\n{self.langHeaderMap[langType]}{block}\u200c\n</p1></pre>',
                 markdown,
@@ -96,25 +88,27 @@ class MarkdownPreview(QTextBrowser):
             )
         print("code block processing took", time() - t0)
         "========================================================"
-
+        
         t0 = time()
         super().setMarkdown(markdown)
         print(f"setting markdown took: {time() - t0}")
 
         # loading images
         "========================================================"
+        t0 = time()
         imageLinks = mdImageRegex.findall(markdown)
         for link in imageLinks:
             cachedFile, image = self.cache.getFile(link)
             if cachedFile:
                 self.document().addResource(2, QUrl(link), image)
+        print(f"image handling took: {time() - t0}")
         "========================================================"
 
         # # adjust size of contents
         # self.document().adjustSize()
 
 
-class MarkdownEditor(QTextEdit):
+class MarkdownEditor(QPlainTextEdit):
     """
     class used to inject markdown behaviour into a QTextEdit
     """
@@ -123,7 +117,7 @@ class MarkdownEditor(QTextEdit):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.setAcceptRichText(False)
+
         self.highlighter = EditorHighlighter(self.document())
 
     def canInsertFromMimeData(self, source: QMimeData) -> bool:

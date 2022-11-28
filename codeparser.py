@@ -57,6 +57,7 @@ class AbstractParser:
         self.currentBlockState = self.parser.currentBlockState
         self.previousBlockState = self.parser.previousBlockState
         self.setFormat = self.parser.setFormat
+        # self.setFormat = lambda *args:()
 
         codeFont = QFont("Cascadia Code", 10)
 

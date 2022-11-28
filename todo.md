@@ -1,12 +1,18 @@
 
-## Sticky honey pot todos 🍯
+# Sticky honey pot todos 🍯
 
-* write javascript parser  (current task)
+* ~~write javascript parser~~ (done, kinda)
     - try to support type script, since js is a strict subset
 * ~~fix bugs regarding window edge drag to scale~~
 
 
-* hide scroll sliders, and implement custom scroll slider that are 
+* write a new config manager (do this next, then go back to scrollbars visuals)
+    - use a json like/python dict like interface to define schema
+    - should handle multiple variable types as before
+    - self modifying code:
+        - generate type hinting file in a meta class to type hint for a default schema layout
+
+* hide scroll sliders, and implement custom scroll slider that are (funtionality implemented, make it look good later)
     - opaque when mouse hovered on it
     - semi transparent when mouse is in window
     - invisible when cursor leaves window 
@@ -23,17 +29,13 @@
     - ctrl 3(#) to append 1 # at the beginning of current line
     - Tab indents selected text by 1 tab, or until the next 4 space increment
     - ctrl space to insert `&nbsp;` once as non removing space (although it seems like Qt preserves space. :/)
-    - maybe a key to make inserting image link or text link quicker, not decided yet.
+                    - maybe a key to make inserting image link or text link quicker, not decided yet.
 
 * write a new hotkey manager
     - use native api for each plotform (windows, linux like, mac) for monitoring global hotkeys
     - have a system to automatically register hotkeys to qt for local hotkeys
 
-* write a new config manager
-    - use a json like/python dict like interface to define schema
-    - should handle multiple variable types as before
-    - self modifying code:
-        - generate type hinting file in a meta class to type hint for a default schema layout
+
 
 
 * bug fix: remove tabs from end of line highlight
@@ -53,3 +55,4 @@
 build
 nuitka notes.py  --enable-plugin=pyside6 --onefile --standalone  --include-data-dir=GUI=GUI  --windows-disable-console
 ```
+

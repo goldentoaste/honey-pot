@@ -372,13 +372,15 @@ class Note(Ui_Note, ScaleableWindowFrame):
             t0 = time()
             self.previewScroll = self.preview.verticalScrollBar().value()
             self.markdown = self.editor.toPlainText()
+            self.preview.setUpdatesEnabled(False)
             self.preview.setMarkdown(self.markdown)
+            self.preview.setUpdatesEnabled(True)
             # self.preview.document().adjustSize()
             # self.fixImage()
             self.needUpdate = False
             self.preview.verticalScrollBar().setValue(self.previewScroll)
-
             self.saveContent()
+
             print(f"update took {time()-t0}")
 
         if self.sizeAdjustTimer > 0:
@@ -390,7 +392,6 @@ class Note(Ui_Note, ScaleableWindowFrame):
             self.sizeAdjustTimer = -1000
 
     def resizeEvent(self, a0) -> None:
-
         self.sizeAdjustTimer = 1
 
     def startEditing(self):
@@ -410,50 +411,6 @@ class Note(Ui_Note, ScaleableWindowFrame):
         if self.updateThread:
             self.updateThread.stop()
             self.updateThread.terminate()
-
-    def fixImage(self):
-        """
-        searched for images found in parsed documents
-        replace web images with cached local images
-        already local images are ignored.
-        """
-        doc = self.preview.document()
-
-        block = doc.begin()
-
-        while block.isValid():
-            bit = QTextBlock.iterator = block.begin()
-
-            while not bit.atEnd():
-                fragment = bit.fragment()
-                textFormat = fragment.charFormat()
-
-                if textFormat.isImageFormat():
-                    imageFormat = textFormat.toImageFormat()
-
-                    imagePath = imageFormat.name()
-                    if not os.path.isfile(imagePath):
-                        cachedWebFile = self.cacheManager.getFile(imagePath)
-                        if cachedWebFile:
-                            self.preview.document().addResource(
-                                2,
-                                QUrl(imagePath),
-                                QImage(
-                                    r"D:\PythonProject\stickyMarkdown\testCache\2e53f07491fb7dc99e3aa8d9c9b4c8a9.png"
-                                ),
-                            )
-                            print(self.preview.document().resource(2, QUrl(imagePath),))
-                            print(self.preview.document().resource(2, QUrl("stufgf"),))
-                            # self.preview.loadResource(2, QUrl(cachedWebFile))
-                            # self.preview.viewport().update()
-                            # cursor.setPosition(fragment.position(), QTextCursor.MoveAnchor)
-                            # cursor.setPosition(
-                            #     fragment.position() + fragment.length(), QTextCursor.KeepAnchor
-                            # )
-                            # cursor.removeSelectedText()
-                            # cursor.insertImage(QImage(cachedWebFile), imagePath)
-                bit += 1
-            block = block.next()
 
 
 def makeFrameDraggable(frame: QFrame):
