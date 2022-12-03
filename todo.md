@@ -19,10 +19,19 @@
     - invisible when cursor leaves window 
 
 * write a new hotkey manager (current task) 
+    - have a hotkeys changed signa, so widgets can update their bindings when needed.
     - use native api for each plotform (windows, linux like, mac) for monitoring global hotkeys
     - have a system to automatically register hotkeys to qt for local hotkeys
+    - the manager itself should hold all the *global*/system wide hotkeys
+    - for local hotkeys:
+        + binded to a widget only
+        + manager hold 
+        + widget provide name and a signal to emit when key is pressed
+        + manager contains the binding name and the keys
 
+* ConfigManger should generate its gui that modifies itself, base on current schema.    
 
+* Hotkey Manager should generate a gui to edit all the key bindings.
 
 
 * implement copying images in preview 
