@@ -27,7 +27,7 @@ TODO STRICTLY TYPE LIST CONTENT LATER!!!
 
 class ConfigManager(QObject):
 
-    configChanged = Signal()
+    configChanged = Signal(QObject)
     loaded = False
 
     def __init__(self, parent: QObject, path: str, schema: Dict[str, Tuple[str, Any]], listSep="@@"):
@@ -82,7 +82,7 @@ class ConfigManager(QObject):
             ) from e
 
     def notifyConfigChanged(self):
-        self.configChanged.emit()
+        self.configChanged.emit(self)
 
     def __contains__(self, name: str):
         return name in self.vals
@@ -173,7 +173,7 @@ class ConfigManager(QObject):
                 typeHintStrs.append(f"{name} : List[{listType}]")
 
         print("")
-        print(f"class {className}:")
+        print(f"class {className}({self.__class__.__name__}):\n")
         for item in typeHintStrs:
             print(f"    {item}")
 

@@ -1,27 +1,32 @@
-from Utils.configManager import ConfigManager
-import os
+
+import sys, os
+
+if __name__ == "__main__":
+    print(os.path.abspath(f"{os.path.dirname(__file__)}\\.."))
+    sys.path.append(os.path.abspath(f"{os.path.dirname(__file__)}\\.."))
+from Utils.ConfigManager import ConfigManager
 
 schema = {
     "Scrollbar":{
         "sScrollbarColor": "#A89984",
         "iScrollbarClickedAlpha": 255,
-        "iScrollbarEnterAlpha": 190,
-        "iScrollbarBGAlpha": 90,
+        "iScrollbarEnterAlpha": 150,
+        "iScrollbarHoverAlpha": 200,
         "bScrollbarUseFade":True,
-        "iScrollbarThickness": 20
+        "iScrollbarThickness": 20,
+        "iScrllbarMinSize" : 30,
     }
 }
+class Config(ConfigManager):
 
-class Config:
-
-    sScrollbarColor : str       
+    sScrollbarColor : str
     iScrollbarClickedAlpha : int
-    iScrollbarEnterAlpha : int  
-    iScrollbarBGAlpha : int     
-    bScrollbarUseFade : bool    
-    iScrollbarThickness : int   
-
-
+    iScrollbarEnterAlpha : int
+    iScrollbarHoverAlpha : int
+    bScrollbarUseFade : bool
+    iScrollbarThickness : int
+    iScrllbarMinSize : int
+    
 config : Config= None
 
 def getConfig():
