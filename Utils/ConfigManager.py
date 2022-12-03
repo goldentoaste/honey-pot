@@ -173,7 +173,7 @@ class ConfigManager(QObject):
                 typeHintStrs.append(f"{name} : List[{listType}]")
 
         print("")
-        print(f"class {className}:\n")
+        print(f"class {className}:")
         for item in typeHintStrs:
             print(f"    {item}")
 
