@@ -7,7 +7,7 @@ from typing import Dict, Literal, Tuple
 from PySide6.QtCore import (QEvent, QMargins, QPoint, QRect, QSizeF, Qt, 
                             QThread, QUrl, Signal)
 from PySide6.QtGui import (QFont, QFontDatabase, QFontMetrics, QIcon, QImage, QCursor,
-                           QMouseEvent, QPixmap, QTextBlock, QTextDocument)
+                           QMouseEvent, QPixmap, QTextBlock, QTextDocument, QShortcut, QKeySequence)
 from PySide6.QtWidgets import QApplication, QFrame, QWidget
 
 from GUI.noteGUI import Ui_Note
@@ -293,6 +293,12 @@ class Note(Ui_Note, ScaleableWindowFrame):
         # ignoreEdgeDrag(self.editor, self, ignoreMargin)
         # x = (ignoreHover(item) for item in (self.pinButton, self.newNoteButton, self.editButton, self.minimizeButton, self.closeButton, self.frame))
 
+
+        #debug
+        self.keys = QShortcut(QKeySequence("Ctrl+Alt+K", ),self)
+        self.keys.activated.connect(lambda: print("wadasdas"))
+
+        
     def setupStyles(self):
         # fonts stuff
         QFontDatabase.addApplicationFont(r"..\\GUI\\Roboto-Regular.ttf")

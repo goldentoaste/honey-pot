@@ -9,6 +9,7 @@ from PySide6.QtGui import QKeySequence, QShortcut
 class _BaseHotkeyManager(QObject):
 
     hotkeysChnaged = Signal(QObject)  # emits self when hotkeys configs are changed.
+    updateHotkeySig = Signal(str, QKeySequence)
 
     """
     This class should contains all the platform independent stuff, such as 
@@ -56,8 +57,11 @@ class _BaseHotkeyManager(QObject):
             for option in self.config.options(section):
                 self.vals[option] = self.config.get(section, option)
                 self.sections[option] = section
+                
 
         self.save()
+        
+        self.bindings : Dict[QObject, Dict[str, QShortcut]]= {} # a dict of objects mapped to a dict of their shortcuts
 
     def bindLocal(self, name: str, obj: QObject, signal: Signal):
         """takes the given args, then bind a hotkey sequence to the object.
@@ -69,11 +73,41 @@ class _BaseHotkeyManager(QObject):
         """
         keySequnce = QKeySequence(self.vals[name], QKeySequence.SequenceFormat.PortableText)
         shortCut = QShortcut(keySequnce, obj)
-        obj.__dict__[
-            "name"
-        ] = shortCut  # giving the reference of the shortcut to the obj itself, so hopefully the hotkey will doestroy itself
         shortCut.activated.connect(signal.emit)
+        
+        try:
+            shortCutDict = self.bindings[obj]
+            if name in shortCutDict:
+                shortCutDict[name].deleteLater() # if shortcut of this name already exist, then replace it
+                
+            self.bindings[obj][name] = shortCut
+        except KeyError:
+            self.bindings[obj] = {name:shortCut}
+    
+    def updateBinding(self, name:str, seq:QKeySequence):
+        # DOLATER maybe make this threaded in case it freezes gui
+        
+        # updating internal data structures.
+        self.vals[name] = seq.toString(QKeySequence.SequenceFormat.PortableText)
+        self.config.set(self.sections[name], name, self.vals[name])
+        self.save()
 
+        # try updating every registered keybinds that currently exists
+        for _, shortcutMap in self.bindings.items():
+            for shortcutName, shortcut in shortcutMap.items():
+                if shortcutName == name:
+                    shortcut.setKey(seq)
+                    break # each name can only occur once
+    
+    def clearBindings(self, obj:QObject):
+        '''
+        removes all key bindings for a obj
+        '''
+        for _, shortcut in self.bindings[obj].items():
+            shortcut.deleteLater()
+        self.bindings.pop(obj)
+    
+            
     def save(self):
         if not os.path.isdir(os.path.dirname(self.path)):
             os.makedirs(os.path.dirname(self.path))

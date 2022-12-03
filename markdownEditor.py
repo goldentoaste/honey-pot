@@ -67,7 +67,8 @@ class MarkdownPreview(QTextBrowser):
         
         self.vertScrollBar = TransScrollBar(Qt.Orientation.Vertical, self.parent(), self)
         self.horScrollBar = TransScrollBar(Qt.Orientation.Horizontal, self.parent(), self)
-        
+    
+
         
     def setMarkdown(self, markdown: str) -> None:
         # fixing code blocks

@@ -5,7 +5,7 @@ from PySide6.QtCore import (QRegularExpression, QRegularExpressionMatch,
                           QRegularExpressionMatchIterator)
 reflags = QRegularExpression.PatternOption
 
-# FIXME dev location adas
+# FIXME dev location 
 cacheLocation = r"D:\PythonProject\stickyMarkdown\testCache"
 
 mdImageRegex = re.compile(r"\!\[[^\[\]]+\]\(([^\(\)]+)\)")  # finds all the image links

@@ -1,5 +1,5 @@
 
-from Hotkeys . BaseHotKeyFManager import _BaseHotkeyManager
+from Hotkeys.baseHotKeyFManager import _BaseHotkeyManager
 import sys
 class HotkeyManager(_BaseHotkeyManager):
     
@@ -12,7 +12,7 @@ class HotkeyManager(_BaseHotkeyManager):
         platform = sys.platform
         
         if platform =='win32':
-            from Hotkeys.WindowsHotkey import WindowsHotkeyManager
+            from Hotkeys.windowsHotkey import WindowsHotkeyManager
             return WindowsHotkeyManager()
         elif platform == 'linux':
             raise NotImplementedError()

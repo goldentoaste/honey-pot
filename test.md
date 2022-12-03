@@ -174,7 +174,7 @@ def ignoreEdgeDrag(target: QWidget, parent: ScaleableWindowFrame, borderSize: in
     def makeReplacementEvent(eventType: Literal["press", "move", "release"]):
         # false for press event
         def replacementEvent(event: QMouseEvent):
-            # FIXME maybe split this to 3 functions instead
+          
 
             if eventType == "release":
                 if target.ignoring:
