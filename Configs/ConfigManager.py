@@ -63,6 +63,8 @@ class ConfigManager(QObject):
                 self.secs[option] = section
 
         self.loaded = True
+        
+        self.save()
 
     def setMultipleVars(self, updates: Dict[str, Any]):
         """

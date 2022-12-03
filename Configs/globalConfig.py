@@ -4,7 +4,7 @@ import sys, os
 if __name__ == "__main__":
     print(os.path.abspath(f"{os.path.dirname(__file__)}\\.."))
     sys.path.append(os.path.abspath(f"{os.path.dirname(__file__)}\\.."))
-from Utils.ConfigManager import ConfigManager
+from Configs.ConfigManager import ConfigManager
 
 schema = {
     "Scrollbar":{
@@ -13,7 +13,7 @@ schema = {
         "iScrollbarEnterAlpha": 150,
         "iScrollbarHoverAlpha": 200,
         "bScrollbarUseFade":True,
-        "iScrollbarThickness": 20,
+        "iScrollbarThickness": 18,
         "iScrllbarMinSize" : 30,
     }
 }

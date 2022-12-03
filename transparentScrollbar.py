@@ -2,7 +2,7 @@ from PySide6.QtCore import QPoint, QRect, QSize, Qt, Signal, Slot, QTimer
 from PySide6.QtGui import QBrush, QColor, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QScrollArea, QScrollBar, QWidget
 from utils import lerp
-from Utils.globalConfig import Config, getConfig
+from Configs.globalConfig import Config, getConfig
 class ScrollProxy(QScrollBar):
     changedSignal = Signal(QScrollBar.SliderChange)
 
@@ -35,7 +35,7 @@ class TransScrollBar(QWidget):
         self.displayRange = 1
 
         self.fade = 0  # 1 for fully opaque, 0 for transparent
-        self.enterFactor = 0.4 # quickly fade in when entered
+        self.enterFactor = 0.3 # quickly fade in when entered
         self.leaveFactor = 0.1 # slowly fade out when leaving
 
         self.fadeTimer  : QTimer= None
@@ -159,7 +159,7 @@ class TransScrollBar(QWidget):
         
         self.fade = self.clickedAlpha
         self.barColor.setAlpha(self.fade)
-
+        self.repaint()
         
         self.clicked = True
         self.clickedOut = not self.barRect().contains(event.position().toPoint())
@@ -177,16 +177,9 @@ class TransScrollBar(QWidget):
         
         self.fade = self.hoverAlpha
         self.barColor.setAlpha(self.fade)
-        
+        self.repaint()
 
     def mouseMoveEvent(self, event) -> None:
-        
-        if self.barRect().contains(event.position().toPoint()):
-            self.fade = self.hoverAlpha
-        else:
-            self.fade = self.enterAlpha
-        self.repaint()
-        
         if event.buttons() != Qt.MouseButton.LeftButton:
             return
         
