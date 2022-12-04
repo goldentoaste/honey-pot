@@ -194,7 +194,6 @@ class TransScrollBar(QWidget):
         event.accept()
 
     def leaveEvent(self, event) -> None:
-
         self.clicked = False
         self.lastPos = None
         event.accept()

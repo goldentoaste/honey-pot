@@ -2,7 +2,7 @@ from ctypes import byref, windll, wintypes
 from time import sleep as seep
 from typing import Dict
 
-from PySide6.QtCore import QKeyCombination, Qt, QThread, Signal, Slot
+from PySide6.QtCore import QKeyCombination, Qt, QThread, Signal, Slot, QObject
 from PySide6.QtGui import QKeyEvent, QKeySequence
 
 from Hotkeys.baseHotKeyFManager import _BaseHotkeyManager
@@ -18,8 +18,12 @@ PM_REMOVE = 1
 class WindowsHotkeyManager(_BaseHotkeyManager):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.worker = Win32KeyWoker(self)
-        self.worker.start()
+        self.workerThread = QThread(self)
+        self.worker = Win32KeyWorker()
+        self.worker.moveToThread(self.workerThread)
+        self.workerThread.start()
+        self.worker.startSig.emit()
+ 
 
     def bindGlobal(self, name: str, signal: Signal):
         keyStr = self.vals[name]
@@ -39,16 +43,18 @@ class WindowsHotkeyManager(_BaseHotkeyManager):
 
         self.worker.regNewHK.emit(keyCode, modCode, signal)
 
-class Win32KeyWoker(QThread):
+class Win32KeyWorker(QObject):
 
     regNewHK = Signal(int, int, Signal)  # keycode, modcode, callback
+    startSig = Signal()
 
-    def __init__(self, parent) -> None:
+    def __init__(self, parent = None) -> None:
         super().__init__(parent)
         self.index = 0
         self.regNewHK.connect(self.regNewHotkey)
         self.bindings: Dict[int, Signal] = {}  # hotkey id mapped to signal to emit
-
+        self.startSig.connect(self.run)
+        
     @Slot(int, int, Signal)
     def regNewHotkey(self, keycode, modcode, callbackSignal):
         self.index += 1
@@ -60,23 +66,41 @@ class Win32KeyWoker(QThread):
         else:
             print("binding NOOO")
             
-        print("in reg",threading.current_thread())
 
+    # def run(self) -> None:
+    #     msg = wintypes.MSG()
+    #     try:
+    #         while True:
+    #             if user32.PeekMessageA(byref(msg), None, 0, 0, PM_REMOVE):
+    #                 print("ready",msg.message)
+    #                 # message ready
+    #                 if msg.message == WM_HOTKEY:
+    #                     sig = self.bindings.get(msg.wParam)
+    #                     if sig:
+    #                         sig.emit()
+    #                 user32.TranslateMessage(byref(msg))
+    #                 user32.DispatchMessageA(byref(msg))
+    #             seep(0.1)
+    #     finally:
+    #         for id in self.bindings:
+    #             user32.UnregisterHotKey(None, id)
+    
     def run(self) -> None:
         msg = wintypes.MSG()
-        print("run",threading.current_thread())
         try:
             while True:
-                if user32.PeekMessageA(byref(msg), None, 0, 0, PM_REMOVE):
-                    print("ready",msg.message)
+                print(msg)
+                if user32.GetMessageA(byref(msg), None, 0, 0)!=0:
                     # message ready
                     if msg.message == WM_HOTKEY:
                         sig = self.bindings.get(msg.wParam)
                         if sig:
                             sig.emit()
-                    user32.TranslateMessage(byref(msg))
-                    user32.DispatchMessageA(byref(msg))
-                seep(0.1)
+                else:
+                    break
+                user32.TranslateMessage(byref(msg))
+                user32.DispatchMessageA(byref(msg))
+
         finally:
             for id in self.bindings:
                 user32.UnregisterHotKey(None, id)
