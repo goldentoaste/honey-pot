@@ -29,8 +29,8 @@ class WindowsHotkeyManager(_BaseHotkeyManager):
         keyStr = self.vals[name]
         if not keyStr:
             return
-        print(keyStr)
-        keyCombo: QKeyCombination = QKeySequence(keyStr)[0]
+
+        keyCombo: QKeyCombination = QKeySequence("+".join([*keyStr.split("+")[:-1], 'a']))[0]
         keyMods = keyCombo.keyboardModifiers()
         keyCode = int(keyStr.split("+")[-1])
         modCode = 0x4000
@@ -58,7 +58,7 @@ class Win32KeyWorker(QObject):
     @Slot(int, int, Signal)
     def regNewHotkey(self, keycode, modcode, callbackSignal):
         self.index += 1
-        modcode=0
+        
         print(keycode, modcode)
         if user32.RegisterHotKey(None, self.index, modcode, keycode):
             print("binding yes")
@@ -104,3 +104,4 @@ class Win32KeyWorker(QObject):
         finally:
             for id in self.bindings:
                 user32.UnregisterHotKey(None, id)
+
