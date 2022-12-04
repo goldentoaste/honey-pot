@@ -1,0 +1,14 @@
+<html>
+
+<script>
+document.onkeydown = function(e) {
+    if (!e) var e = window.event;
+    if (e.keyCode) keycode = e.keyCode;
+    else if (e.which) keycode = e.which;
+    console.log(keycode + ", 0x" + keycode.toString(16));
+}
+</script>
+
+<body>
+</body>
+</html>

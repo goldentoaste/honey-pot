@@ -25,4 +25,4 @@ if __name__ == "__main__":
             print(match)
 
 def lerp(a, b, t):
-    return a + t * (b -a)
+    return a + t * (b - a)

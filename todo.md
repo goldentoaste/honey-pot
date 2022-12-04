@@ -24,10 +24,14 @@
     - have a system to automatically register hotkeys to qt for local hotkeys
     - the manager itself should hold all the *global*/system wide hotkeys
     - for local hotkeys:
-        + binded to a widget only
-        + manager hold 
-        + widget provide name and a signal to emit when key is pressed
-        + manager contains the binding name and the keys
+        + ~~binded to a widget only~~
+        +~~ manager hold all the details regarding binded keys~~
+        +~~widget provide name and a signal to emit when key is pressed~~
+        + ~~manager contains the binding name and the keys~~
+
+    * now working on:
+
+        + implement global hotkeys for windows.
 
 * ConfigManger should generate its gui that modifies itself, base on current schema.    
 

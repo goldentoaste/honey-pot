@@ -2,7 +2,7 @@ from PySide6.QtCore import QPoint, QRect, QSize, Qt, Signal, Slot, QTimer
 from PySide6.QtGui import QBrush, QColor, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QScrollArea, QScrollBar, QWidget
 from utils import lerp
-from Configs.globalConfig import Config, getConfig
+from Configs.appConfig import Config, getAppConfig
 class ScrollProxy(QScrollBar):
     changedSignal = Signal(QScrollBar.SliderChange)
 
@@ -54,7 +54,7 @@ class TransScrollBar(QWidget):
         parent.leaveEvent = (lambda originalLeave: (lambda event: (originalLeave(event), self.parentLeave(event))))(parent.leaveEvent)
         
         self.setMouseTracking(True)
-        self.configChanged(getConfig())
+        self.configChanged(getAppConfig())
         
     def configChanged(self, config:Config):
         

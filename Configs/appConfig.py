@@ -29,7 +29,7 @@ class Config(ConfigManager):
     
 config : Config= None
 
-def getConfig():
+def getAppConfig():
     global config 
     
     if config is None:
@@ -38,4 +38,4 @@ def getConfig():
     return config
 
 if __name__ == "__main__":
-    getConfig().makeTypeHintClass("Config")
+    getAppConfig().makeTypeHintClass("Config")

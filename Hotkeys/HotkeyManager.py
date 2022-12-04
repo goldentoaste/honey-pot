@@ -7,13 +7,13 @@ class HotkeyManager(_BaseHotkeyManager):
     This is just a proxy class that makes a manager specific to a os platform
     '''
     
-    def __new__(cls) -> 'HotkeyManager':
+    def __new__(cls, *args, **kwargs) -> 'HotkeyManager':
         
         platform = sys.platform
         
         if platform =='win32':
             from Hotkeys.windowsHotkey import WindowsHotkeyManager
-            return WindowsHotkeyManager()
+            return WindowsHotkeyManager(*args, **kwargs)
         elif platform == 'linux':
             raise NotImplementedError()
         elif platform == 'darwin':

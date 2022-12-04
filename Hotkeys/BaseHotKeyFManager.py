@@ -32,16 +32,17 @@ class _BaseHotkeyManager(QObject):
     should use a config parser to read and write values
     """
 
-    def __init__(self, parent: QObject, path: str, schema: Dict[str, Dict[str, str]]) -> None:
+    def __init__(self, parent: QObject, path: str, schema: Dict[str, Dict[str, str]], globals:List[str]) -> None:
         super().__init__(parent)
 
         self.path = path
         self.config = ConfigParser()
+        self.config.optionxform = str
 
         if os.path.isfile(path):
             self.config.read(path)
-
-        self.vals = {}  # binding name mapped to key binding str
+        self.globals = globals
+        self.vals: Dict[str, str] = {}  # binding name mapped to key binding str
         self.sections = {}  # binding name mapped to section names
 
         # add missing values into config
@@ -49,7 +50,7 @@ class _BaseHotkeyManager(QObject):
             if not self.config.has_section(section):
                 self.config.add_section(section)
             for bindingName, binding in schema[section].items():
-                if not self.config.has_option(bindingName):
+                if not self.config.has_option(section, bindingName):
                     self.config.set(section, bindingName, binding)
 
         # load options into memory
@@ -63,7 +64,10 @@ class _BaseHotkeyManager(QObject):
         
         self.bindings : Dict[QObject, Dict[str, QShortcut]]= {} # a dict of objects mapped to a dict of their shortcuts
 
-    def bindLocal(self, name: str, obj: QObject, signal: Signal):
+    def bindGlobal(self, name:str, signal:Signal):
+        raise NotImplementedError()
+
+    def bindLocal(self, name: str, obj: QObject,signal: Signal, context: Qt.ShortcutContext = Qt.ShortcutContext.WindowShortcut, ):
         """takes the given args, then bind a hotkey sequence to the object.
 
         Args:
@@ -72,7 +76,7 @@ class _BaseHotkeyManager(QObject):
             signal (Signal): signal to call when binded keys are triggered.
         """
         keySequnce = QKeySequence(self.vals[name], QKeySequence.SequenceFormat.PortableText)
-        shortCut = QShortcut(keySequnce, obj)
+        shortCut = QShortcut(keySequnce, obj, context=context)
         shortCut.activated.connect(signal.emit)
         
         try:
@@ -113,3 +117,9 @@ class _BaseHotkeyManager(QObject):
             os.makedirs(os.path.dirname(self.path))
         with open(self.path, "w", encoding="utf-8") as file:
             self.config.write(file)
+
+    def generateConsts(self):
+        print('\n#hoykey names:\n#########################')
+        for val in self.vals:
+            print(f"{val.title()} = '{val}'")
+        print("#########################'\n")

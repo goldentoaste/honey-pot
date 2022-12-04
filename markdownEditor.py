@@ -8,7 +8,7 @@ from time import time
 from typing import List
 
 from PySide6.QtCore import QMimeData, QSize, QUrl, Signal, Qt
-from PySide6.QtGui import QImage
+from PySide6.QtGui import QImage, QKeyEvent, QKeySequence, QShortcut
 from PySide6.QtWidgets import QTextBrowser, QTextEdit, QPlainTextEdit
 
 from imageCache import CacheManager
@@ -55,7 +55,8 @@ class MarkdownPreview(QTextBrowser):
         self.highlighter = PreviewHighlighter(self.document())
         self.document().setIndentWidth(20)
         
-        
+        self.keys = QShortcut(QKeySequence("Ctrl+.", ),self)
+        self.keys.activated.connect(lambda: print("test"))
         # Set style
         
         self.setStyleSheet(

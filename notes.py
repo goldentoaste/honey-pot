@@ -14,6 +14,7 @@ from GUI.noteGUI import Ui_Note
 from imageCache import CacheManager
 from utils import  getPath
 import sys
+from Hotkeys.keyConfig import getKeyConfig
 user32 = ctypes.windll.user32
 
 
@@ -236,6 +237,7 @@ def ignoreHover(ob: QWidget) -> QWidget:
 
 
 class Note(Ui_Note, ScaleableWindowFrame):
+    testSig = Signal()
     def __init__(self, filePath: str, cacheManager: CacheManager, markdown: str = None,) -> None:
         super().__init__()
         self.setupUi(self)
@@ -272,6 +274,7 @@ class Note(Ui_Note, ScaleableWindowFrame):
         self.preview.setUndoRedoEnabled(False)
         self.preview.setAcceptRichText(False)
 
+
     def setupEvents(self):
         self.setMouseTracking(True)
         self.editor.textChanged.connect(lambda: setattr(self, "needUpdate", True))
@@ -295,8 +298,9 @@ class Note(Ui_Note, ScaleableWindowFrame):
 
 
         #debug
-        self.keys = QShortcut(QKeySequence("Ctrl+Alt+K", ),self)
-        self.keys.activated.connect(lambda: print("wadasdas"))
+        c = getKeyConfig()
+        c.bindGlobal("debugKey", self.testSig)
+        self.testSig.connect(lambda:print("asdasdasdasdasddasdasdasdasd"))
 
         
     def setupStyles(self):
@@ -466,6 +470,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     
     s = QWidget()
+
     n = Note(
         r"C:\Testing\test.md", CacheManager(r"C:\Testing\cache", 5), "",
     )
