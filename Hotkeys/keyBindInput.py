@@ -1,38 +1,42 @@
+import os
+import sys
+
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QKeyEvent, QKeySequence
 from PySide6.QtWidgets import QApplication, QLineEdit, QToolTip
-import os, sys
+
 if __name__ == "__main__":
     print(os.path.abspath(f"{os.path.dirname(__file__)}\\.."))
     sys.path.append(os.path.abspath(f"{os.path.dirname(__file__)}\\.."))
 from Hotkeys.keyConsts import conversionTable
 
-keyTextFilter= {
-            "!": "1",
-            "@": "2",
-            "#": "3",
-            "$": "4",
-            "%": "5",
-            "^": "6",
-            "&": "7",
-            "*": "8",
-            "(": "9",
-            ")": "0",
-            "_": "-",
-            "+": "=",
-            '{':'[',
-            '}':']',
-            '|':'\\',
-            ':':';',
-            '"':"'",
-            '<':',',
-            '>':'.',
-            '?':'/',
-            '~':'`',
-            "Control":'',
-            "Alt":"",
-            "Shift":""
-        }
+keyTextFilter = {
+    "!": "1",
+    "@": "2",
+    "#": "3",
+    "$": "4",
+    "%": "5",
+    "^": "6",
+    "&": "7",
+    "*": "8",
+    "(": "9",
+    ")": "0",
+    "_": "-",
+    "+": "=",
+    "{": "[",
+    "}": "]",
+    "|": "\\",
+    ":": ";",
+    '"': "'",
+    "<": ",",
+    ">": ".",
+    "?": "/",
+    "~": "`",
+    "Control": "",
+    "Alt": "",
+    "Shift": "",
+}
+
 
 class KeyBindInput(QLineEdit):
 
@@ -40,7 +44,7 @@ class KeyBindInput(QLineEdit):
         str, str
     )  # will emit name mapped to a Qkeysequence representing the key combo when finished editing.
 
-    def __init__(self, parent=None, name="", keyString="", isGlobal = False):
+    def __init__(self, parent=None, name="", keyString="", isGlobal=False):
         super().__init__(parent)
         self.isGlobal = isGlobal
         self.name = name
@@ -76,9 +80,7 @@ class KeyBindInput(QLineEdit):
 
         if a.key() == Qt.Key.Key_Enter:
             if self.strIsValid(self.keyString):
-                self.keyBindChanged.emit(
-                    self.name, self.keyString
-                )
+                self.keyBindChanged.emit(self.name, self.keyString)
                 return
 
         s = self.getString(a)
@@ -87,11 +89,10 @@ class KeyBindInput(QLineEdit):
         else:
             self.setText(s)
         self.keyString = s
-    
 
     def strIsValid(self, s: str):
-        out=  s.split('+')
-        return len(out) > 0 and out[-1] not in ("Ctrl","Alt","Shift")
+        out = s.split("+")
+        return len(out) > 0 and out[-1] not in ("Ctrl", "Alt", "Shift")
 
     def getString(self, a: QKeyEvent):
         out = ""
@@ -103,22 +104,19 @@ class KeyBindInput(QLineEdit):
         if a.modifiers() & Qt.KeyboardModifier.ShiftModifier:
             out += "Shift+"
 
-
         if not self.isGlobal:
             t = QKeySequence(a.key()).toString()
+
             out += keyTextFilter.get(t, t)
         else:
             out += str(a.nativeVirtualKey())
-        return out.strip('+ ').title()
-    
-    def getVkName(self, vk):
-        pass
+        return out.strip("+ ").title()
 
 
 if __name__ == "__main__":
     import sys
 
     a = QApplication(sys.argv)
-    w = KeyBindInput(None, isGlobal=True)
+    w = KeyBindInput(None, isGlobal=False)
     w.show()
     a.exec()

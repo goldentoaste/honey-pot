@@ -5,7 +5,10 @@
 ##### sadas
 ###### *asdasd*
 
-
+some *testing
+tyext
+adasd
+asdasdasdasdas*
 
 ```py
 
@@ -135,6 +138,112 @@ Here is a [modernized](https://github.com/tylearymf/SETUNA2) version of SETUNA, 
 
 # Currently working on:
 - rewrite the whole thing in pyqt5 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # ~~Currently working on:~~

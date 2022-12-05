@@ -7,16 +7,16 @@ from random import randint
 from time import time
 from typing import List
 
-from PySide6.QtCore import QMimeData, QSize, QUrl, Signal, Qt
-from PySide6.QtGui import QImage, QKeyEvent, QKeySequence, QShortcut
-from PySide6.QtWidgets import QTextBrowser, QTextEdit, QPlainTextEdit
+from PySide6.QtCore import QMimeData, QSize, Qt, QUrl, Signal, Slot
+from PySide6.QtGui import (QImage, QKeyEvent, QKeySequence, QShortcut,
+                           QTextCursor)
+from PySide6.QtWidgets import QPlainTextEdit, QTextBrowser, QTextEdit
 
+from Hotkeys.keyConfig import Bold, Italic, Wrapstars, Strikethrough, Title, Htmlspace, getKeyConfig
 from imageCache import CacheManager
 from syntaxHighlighting import EditorHighlighter, Languages, PreviewHighlighter
-from utils import cacheLocation, mdCodeBlockRegex, mdImageRegex
 from transparentScrollbar import TransScrollBar
-
-
+from utils import cacheLocation, mdCodeBlockRegex, mdImageRegex
 
 copyCommand = "copy" if os.name == "nt" else "cp"  # copy for windows, cp for unix systems
 backSlash = "\\"
@@ -54,23 +54,25 @@ class MarkdownPreview(QTextBrowser):
 
         self.highlighter = PreviewHighlighter(self.document())
         self.document().setIndentWidth(20)
-        
-        self.keys = QShortcut(QKeySequence("Ctrl+.", ),self)
+
+        self.keys = QShortcut(
+            QKeySequence(
+                "Ctrl+.",
+            ),
+            self,
+        )
         self.keys.activated.connect(lambda: print("test"))
         # Set style
-        
+
         self.setStyleSheet(
-            '''
+            """
             QTextEdit{border:1px solid #000000;}
-            '''
+            """
         )
-       
-        
+
         self.vertScrollBar = TransScrollBar(Qt.Orientation.Vertical, self.parent(), self)
         self.horScrollBar = TransScrollBar(Qt.Orientation.Horizontal, self.parent(), self)
-    
 
-        
     def setMarkdown(self, markdown: str) -> None:
         # fixing code blocks
         "========================================================"
@@ -90,7 +92,7 @@ class MarkdownPreview(QTextBrowser):
             )
         print("code block processing took", time() - t0)
         "========================================================"
-        
+
         t0 = time()
         super().setMarkdown(markdown)
         print(f"setting markdown took: {time() - t0}")
@@ -117,10 +119,30 @@ class MarkdownEditor(QPlainTextEdit):
 
     fileAddedSignal = Signal(str)
 
+    wrapStarsSig = Signal()
+    boldSig = Signal()
+    strikeThrough = Signal()
+    title = Signal()
+    space = Signal()
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.highlighter = EditorHighlighter(self.document())
+
+        key = getKeyConfig()
+        key.bindLocal(Wrapstars, self, self.wrapStarsSig, Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        key.bindLocal(Italic, self, self.wrapStarsSig, Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        key.bindLocal(Bold, self, self.boldSig, Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        key.bindLocal(Strikethrough, self, self.strikeThrough, Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        key.bindLocal(Title, self, self.title, Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        key.bindLocal(Htmlspace, self, self.space, Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        
+        self.wrapStarsSig.connect(lambda:self.wrapWithChars("*", 1)) 
+        self.boldSig.connect(lambda:self.wrapWithChars("*", 2)) 
+        self.strikeThrough.connect(lambda:self.wrapWithChars("~", 2)) 
+        self.title.connect(self.insertAtBeginning)
+        self.space.connect(self.insertAtCursor("&nbsp", 1))
 
     def canInsertFromMimeData(self, source: QMimeData) -> bool:
         return super().canInsertFromMimeData(source)
@@ -174,3 +196,64 @@ class MarkdownEditor(QPlainTextEdit):
                     print(f"url is not a local file uri: {url}")
 
         return super().insertFromMimeData(source)
+
+    def insertAtCursor(self, chars="*", n=1):
+        cursor = self.textCursor()
+        cursor.insertText(chars * n)
+        self.setTextCursor(cursor)
+
+    def wrapWithChars(self, char="*", n=1):
+        """
+        wrap selected text with char, n times.
+        if no text is selected, try to wrap the wholeline, then place the cursor infront
+        of the ending char group: text text text -> **text text text<cursor here>**
+        """
+        cursor: QTextCursor = self.textCursor()
+        cursor.beginEditBlock()
+        print("in wrap stars")
+        if cursor.hasSelection():
+            
+            start = cursor.selectionStart()
+            end = cursor.selectionEnd()
+            # start with end, so start is not effect
+            cursor.setPosition(end)
+            cursor.insertText(char * n)
+            cursor.setPosition(start)
+            cursor.insertText(char * n)
+            
+            cursor.setPosition(end +n, QTextCursor.MoveMode.KeepAnchor)
+        else:
+            # apply to whole line here
+            cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock, QTextCursor.MoveMode.MoveAnchor)
+            cursor.insertText(char * n)
+            start = cursor.position()
+            cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.MoveAnchor)
+            end  = cursor.position()
+            cursor.insertText(char * n)
+            
+            cursor.setPosition(end)
+            cursor.setPosition(start, QTextCursor.MoveMode.KeepAnchor)
+        cursor.endEditBlock()
+        self.setTextCursor(cursor)
+            
+            
+    def insertAtBeginning(self, char="#", n=1):
+        
+        cursor = self.textCursor()
+        cursor.beginEditBlock()
+        pos = cursor.position()
+        
+        cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock)
+        cursor.insertText(char * n)
+        
+        if not cursor.atBlockEnd():
+            cursor.setPosition(cursor.position() + 1, QTextCursor.MoveMode.KeepAnchor)
+            t= cursor.selectedText()
+            if t != " " and t !="#":
+                cursor.setPosition(cursor.position() - 1)
+                cursor.insertText(" ")
+                n += 1
+        
+        cursor.setPosition(pos + n)
+        self.setTextCursor(cursor)
+        cursor.endEditBlock()

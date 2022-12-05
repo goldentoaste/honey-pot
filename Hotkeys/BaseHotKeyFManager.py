@@ -32,7 +32,9 @@ class _BaseHotkeyManager(QObject):
     should use a config parser to read and write values
     """
 
-    def __init__(self, parent: QObject, path: str, schema: Dict[str, Dict[str, str]], globals:List[str]) -> None:
+    def __init__(
+        self, parent: QObject, path: str, schema: Dict[str, Dict[str, str]], globals: List[str]
+    ) -> None:
         super().__init__(parent)
 
         self.path = path
@@ -58,16 +60,23 @@ class _BaseHotkeyManager(QObject):
             for option in self.config.options(section):
                 self.vals[option] = self.config.get(section, option)
                 self.sections[option] = section
-                
 
         self.save()
-        
-        self.bindings : Dict[QObject, Dict[str, QShortcut]]= {} # a dict of objects mapped to a dict of their shortcuts
 
-    def bindGlobal(self, name:str, signal:Signal):
+        self.bindings: Dict[
+            QObject, Dict[str, QShortcut]
+        ] = {}  # a dict of objects mapped to a dict of their shortcuts
+
+    def bindGlobal(self, name: str, signal: Signal):
         raise NotImplementedError()
 
-    def bindLocal(self, name: str, obj: QObject,signal: Signal, context: Qt.ShortcutContext = Qt.ShortcutContext.WindowShortcut, ):
+    def bindLocal(
+        self,
+        name: str,
+        obj: QObject,
+        signal: Signal,
+        context: Qt.ShortcutContext = Qt.ShortcutContext.WindowShortcut,
+    ):
         """takes the given args, then bind a hotkey sequence to the object.
 
         Args:
@@ -78,19 +87,19 @@ class _BaseHotkeyManager(QObject):
         keySequnce = QKeySequence(self.vals[name], QKeySequence.SequenceFormat.PortableText)
         shortCut = QShortcut(keySequnce, obj, context=context)
         shortCut.activated.connect(signal.emit)
-        
+        print("in bind local", name, keySequnce.toString(),keySequnce[0])
         try:
             shortCutDict = self.bindings[obj]
             if name in shortCutDict:
-                shortCutDict[name].deleteLater() # if shortcut of this name already exist, then replace it
-                
+                shortCutDict[name].deleteLater()  # if shortcut of this name already exist, then replace it
+
             self.bindings[obj][name] = shortCut
         except KeyError:
-            self.bindings[obj] = {name:shortCut}
-    
-    def updateBinding(self, name:str, seq:QKeySequence):
+            self.bindings[obj] = {name: shortCut}
+
+    def updateBinding(self, name: str, seq: QKeySequence):
         # DOLATER maybe make this threaded in case it freezes gui
-        
+
         # updating internal data structures.
         self.vals[name] = seq.toString(QKeySequence.SequenceFormat.PortableText)
         self.config.set(self.sections[name], name, self.vals[name])
@@ -101,17 +110,16 @@ class _BaseHotkeyManager(QObject):
             for shortcutName, shortcut in shortcutMap.items():
                 if shortcutName == name:
                     shortcut.setKey(seq)
-                    break # each name can only occur once
-    
-    def clearBindings(self, obj:QObject):
-        '''
+                    break  # each name can only occur once
+
+    def clearBindings(self, obj: QObject):
+        """
         removes all key bindings for a obj
-        '''
+        """
         for _, shortcut in self.bindings[obj].items():
             shortcut.deleteLater()
         self.bindings.pop(obj)
-    
-            
+
     def save(self):
         if not os.path.isdir(os.path.dirname(self.path)):
             os.makedirs(os.path.dirname(self.path))
@@ -119,7 +127,7 @@ class _BaseHotkeyManager(QObject):
             self.config.write(file)
 
     def generateConsts(self):
-        print('\n#hoykey names:\n#########################')
+        print("\n#hoykey names:\n#########################")
         for val in self.vals:
             print(f"{val.title()} = '{val}'")
-        print("#########################'\n")
+        print("#########################\n")
