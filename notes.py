@@ -355,6 +355,9 @@ class Note(Ui_Note, ScaleableWindowFrame):
             self.savingDone = False
             with open(self.filePath, "w", encoding="utf-8") as f:
                 f.write(self.markdown)
+                
+            with open("test.html", 'w', encoding='utf-8') as f:
+                f.write(self.preview.toHtml())
             self.savingDone = True
 
         if not self.savingDone:

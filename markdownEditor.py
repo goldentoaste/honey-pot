@@ -7,8 +7,8 @@ from random import randint
 from time import time
 from typing import List
 
-from PySide6.QtCore import QMimeData, QSize, Qt, QUrl, Signal, Slot
-from PySide6.QtGui import (QImage, QKeyEvent, QKeySequence, QShortcut,
+from PySide6.QtCore import QMimeData, QSize, Qt, QUrl, Signal, Slot, QRegularExpression
+from PySide6.QtGui import (QImage, QKeyEvent, QKeySequence, QShortcut, 
                            QTextCursor)
 from PySide6.QtWidgets import QPlainTextEdit, QTextBrowser, QTextEdit
 
@@ -143,6 +143,8 @@ class MarkdownEditor(QPlainTextEdit):
         self.strikeThrough.connect(lambda:self.wrapWithChars("~", 2)) 
         self.title.connect(self.insertAtBeginning)
         self.space.connect(self.insertAtCursor("&nbsp", 1))
+        
+        self.prefixToSkip = QRegularExpression(r"\s*(?:[-+*])\s+(?:\[(?: |x)\]\s+)?")
 
     def canInsertFromMimeData(self, source: QMimeData) -> bool:
         return super().canInsertFromMimeData(source)
@@ -210,7 +212,6 @@ class MarkdownEditor(QPlainTextEdit):
         """
         cursor: QTextCursor = self.textCursor()
         cursor.beginEditBlock()
-        print("in wrap stars")
         if cursor.hasSelection():
             
             start = cursor.selectionStart()
@@ -224,7 +225,17 @@ class MarkdownEditor(QPlainTextEdit):
             cursor.setPosition(end +n, QTextCursor.MoveMode.KeepAnchor)
         else:
             # apply to whole line here
+            
+            cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
+            text = cursor.selectedText()
+            
             cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock, QTextCursor.MoveMode.MoveAnchor)
+            match = self.prefixToSkip.match(text)
+            if match.capturedStart() >= 0:
+                print("test!", match.capturedTexts())
+                cursor.setPosition(cursor.position() + match.capturedEnd()-1)
+            
+            
             cursor.insertText(char * n)
             start = cursor.position()
             cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.MoveAnchor)
