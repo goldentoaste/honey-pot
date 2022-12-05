@@ -1,6 +1,12 @@
 
 # Sticky honey pot todos 🍯
 
+## Current task:
+* implement some main menu features:
+    + make general layouting
+    + make menu page for mardown editing and key bindings
+    + skip notes management and list for now
+* separate global config by sections
 
 * ConfigManger should generate its gui that modifies itself, base on current schema.    
 * Hotkey Manager should generate a gui to edit all the key bindings.
@@ -15,10 +21,13 @@
     - (done)ctrl B to make selection Bold (wrapping * twice)
     - (done)ctrl `(~) to cross out current selection (wrap ~ twice)
     - (done)ctrl 3(#) to append 1 # at the beginning of current line
-    - Tab indents selected text by 1 tab, or until the next 4 space increment
+    
     - ctrl space to insert `&nbsp;` once as non removing space (although it seems like Qt preserves space. :/)
                     - maybe a key to make inserting image link or text link quicker, not decided yet.
 
+    * (current):
+    - Ctrl + Tab indents current line by 1, or until the next 4 space increment
+    - Shift + Tab de-indent the current line
     - improvements to make:
         + if an hotkey operation effects the whole line/insert at beginning, it should skip any valid markdown symbols, then start applying their effects there.
 
