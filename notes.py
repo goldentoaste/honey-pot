@@ -45,7 +45,7 @@ class ScaleableWindowFrame(QWidget):
         #     -16,
         #     0x00840000,
         # )
-        self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
+        self.setWindowFlags(Qt.WindowType.Window| Qt.WindowType.FramelessWindowHint)
 
     directionCursor: Dict[Tuple[int, int], Qt.CursorShape] = {
         (top, left): c.SizeFDiagCursor,
@@ -241,6 +241,7 @@ class Note(Ui_Note, ScaleableWindowFrame):
     def __init__(self, filePath: str, cacheManager: CacheManager, markdown: str = None,) -> None:
         super().__init__()
         self.setupUi(self)
+        
         self.cacheManager = cacheManager
         self.filePath = filePath
         if not os.path.isfile(filePath):
@@ -266,7 +267,6 @@ class Note(Ui_Note, ScaleableWindowFrame):
         self.sizeAdjustTimer = -1
 
         self.startEditing()
-
         self.setupStyles()
         self.setupEvents()
 
@@ -323,12 +323,12 @@ class Note(Ui_Note, ScaleableWindowFrame):
         # button icons
         self.pinIcon = QIcon(QPixmap(getPath("GUI\\pin.svg")))
         self.filledPinIcon = QIcon(QPixmap(getPath("GUI\\pinFilled.svg")))
-
-        self.pinButton.setIcon(self.pinIcon)
-        self.newNoteButton.setIcon(QIcon(QPixmap(getPath("GUI\\add.svg"))))
-        self.editButton.setIcon(QIcon(QPixmap(getPath("GUI\\edit.svg"))))
-        self.minimizeButton.setIcon(QIcon(QPixmap(getPath("GUI\\minimize.svg"))))
-        self.closeButton.setIcon(QIcon(QPixmap(getPath("GUI\\close.svg"))))
+        # self.menuButton.setIcon(QIcon(QPixmap(getPath("GUI\\menu.svg"))))
+        # self.pinButton.setIcon(self.pinIcon)
+        # self.newNoteButton.setIcon(QIcon(QPixmap(getPath("GUI\\add.svg"))))
+        # self.editButton.setIcon(QIcon(QPixmap(getPath("GUI\\edit.svg"))))
+        # self.minimizeButton.setIcon(QIcon(QPixmap(getPath("GUI\\minimize.svg"))))
+        # self.closeButton.setIcon(QIcon(QPixmap(getPath("GUI\\close.svg"))))
 
         self.pinButton.clicked.connect(self.togglePin)
         self.editButton.clicked.connect(self.toggleEdit)
@@ -471,14 +471,13 @@ class NoteUpdateThread(QThread):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    
+
+    # n = Note(
+    #     r"C:\Testing\test.md", CacheManager(r"C:\Testing\cache", 5), "",
+    # )
+    # n.show()
     s = QWidget()
-
-    n = Note(
-        r"C:\Testing\test.md", CacheManager(r"C:\Testing\cache", 5), "",
-    )
-    n.show()
-
+    s.show()
     sys.exit(app.exec())
 
 

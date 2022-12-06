@@ -103,6 +103,10 @@
           <property name="text">
            <string/>
           </property>
+          <property name="icon">
+           <iconset resource="stickyResource.qrc">
+            <normaloff>:/GUI/add.svg</normaloff>:/GUI/add.svg</iconset>
+          </property>
           <property name="iconSize">
            <size>
             <width>20</width>
@@ -130,6 +134,10 @@
           <property name="text">
            <string/>
           </property>
+          <property name="icon">
+           <iconset resource="stickyResource.qrc">
+            <normaloff>:/GUI/pin.svg</normaloff>:/GUI/pin.svg</iconset>
+          </property>
           <property name="iconSize">
            <size>
             <width>20</width>
@@ -150,6 +158,35 @@
           </property>
           <property name="text">
            <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="stickyResource.qrc">
+            <normaloff>:/GUI/edit.svg</normaloff>:/GUI/edit.svg</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="flat">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="menuButton">
+          <property name="styleSheet">
+           <string notr="true">QPushButton:hover:!pressed{
+	border: 1px solid #000000;
+}</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="stickyResource.qrc">
+            <normaloff>:/GUI/menu.svg</normaloff>:/GUI/menu.svg</iconset>
           </property>
           <property name="iconSize">
            <size>
@@ -191,6 +228,10 @@
           <property name="text">
            <string/>
           </property>
+          <property name="icon">
+           <iconset resource="stickyResource.qrc">
+            <normaloff>:/GUI/minimize.svg</normaloff>:/GUI/minimize.svg</iconset>
+          </property>
           <property name="iconSize">
            <size>
             <width>20</width>
@@ -220,6 +261,10 @@
           </property>
           <property name="text">
            <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="stickyResource.qrc">
+            <normaloff>:/GUI/close.svg</normaloff>:/GUI/close.svg</iconset>
           </property>
           <property name="iconSize">
            <size>
@@ -415,6 +460,8 @@ p, li { white-space: pre-wrap; }
    <header>markdownEditor</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="stickyResource.qrc"/>
+ </resources>
  <connections/>
 </ui>
