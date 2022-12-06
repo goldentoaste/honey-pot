@@ -21,7 +21,7 @@ Htmlspace = "htmlSpace"
 
 
 schema = {
-    "debug": {"debugKey": "Ctrl+Alt+K"},
+    "debug": {"debugKey": "Ctrl+Alt+50"},
     "Markdown Editor": {
         "wrapStars": "Ctrl+8",
         "italic": "Ctrl+I",  # behaves the same as wrapStars, does not check for too many stars for now

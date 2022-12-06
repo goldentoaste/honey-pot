@@ -1,5 +1,5 @@
 import os
-from configparser import ConfigParser, NoOptionError, NoSectionError
+from configparser import ConfigParser
 from typing import Any, Dict, List, Tuple
 
 from PySide6.QtCore import QObject, Signal

@@ -472,12 +472,11 @@ class NoteUpdateThread(QThread):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
-    # n = Note(
-    #     r"C:\Testing\test.md", CacheManager(r"C:\Testing\cache", 5), "",
-    # )
-    # n.show()
-    s = QWidget()
-    s.show()
+    n = Note(
+        r"C:\Testing\test.md", CacheManager(r"C:\Testing\cache", 5), "",
+    )
+    n.show()
+
     sys.exit(app.exec())
 
 

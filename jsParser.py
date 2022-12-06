@@ -3,9 +3,7 @@ from PySide6.QtCore import (QRegularExpression, QRegularExpressionMatch,
 from PySide6.QtGui import (QColor, QFont, QSyntaxHighlighter, QTextCharFormat,
                          QTextDocument)
 
-from codeparser import (AbstractParser, addToState, pythonMLCommentState,
-                        removeState, stateContains)
-
+from codeparser import AbstractParser
 reflags = QRegularExpression.PatternOption
 
 
@@ -143,9 +141,7 @@ class JsParser(AbstractParser):
         while stringMatchs.hasNext():
             match = stringMatchs.next()
             self.setFormat(match.capturedStart(), match.capturedLength(), self.string)
-        
-       
-        
+
         typeHints = typeHintRegex.globalMatch(text)
         while typeHints.hasNext():
             match =typeHints.next()

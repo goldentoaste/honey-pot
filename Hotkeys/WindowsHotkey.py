@@ -1,6 +1,5 @@
 import threading
 from ctypes import byref, windll, wintypes
-from time import sleep as seep
 from typing import Dict
 
 from PySide6.QtCore import (QCoreApplication, QKeyCombination, QObject, Qt,

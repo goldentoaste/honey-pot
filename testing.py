@@ -13,12 +13,12 @@ from PySide6.QtGui import (QFont, QFontDatabase, QFontMetrics, QIcon, QImage, QC
                            QMouseEvent, QPixmap, QTextBlock, QTextDocument, QShortcut, QKeySequence)
 from PySide6.QtWidgets import QApplication, QFrame, QWidget
 
-# from GUI.noteGUI import Ui_Note
-# from imageCache import CacheManager
-# from utils import  getPath
-# import sys
-# from Hotkeys.keyConfig import getKeyConfig
-# user32 = ctypes.windll.user32
+from GUI.noteGUI import Ui_Note
+from imageCache import CacheManager
+from utils import  getPath
+import sys
+from Hotkeys.keyConfig import getKeyConfig
+user32 = ctypes.windll.user32
 
 import sys
 if __name__ == '__main__':

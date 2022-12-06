@@ -1,11 +1,11 @@
 import os
 from glob import glob
 from hashlib import md5
-from time import time
+
 from typing import Dict, Tuple
 
 import requests
-from PySide6.QtGui import QImage, QPixmap
+from PySide6.QtGui import QImage
 from requests.exceptions import RequestException
 from validators import url as isUrl
 

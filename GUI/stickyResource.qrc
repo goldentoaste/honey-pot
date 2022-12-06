@@ -1,5 +1,7 @@
 <RCC>
   <qresource prefix="GUI">
+    <file>settings.svg</file>
+    <file>search.svg</file>
     <file>add.svg</file>
     <file>close.svg</file>
     <file>edit.svg</file>

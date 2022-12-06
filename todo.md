@@ -42,10 +42,10 @@
         + `bricks`
         + `brain` etc
 
-
+--include-data-file=Hotkeys\windowsHotkey.py=Hotkeys\windowsHotkey.py
 ```
 build
-nuitka notes.py  --enable-plugin=pyside6 --onefile --standalone  --include-data-dir=GUI=GUI  --windows-disable-console
+nuitka notes.py  --enable-plugin=pyside6 --onefile --standalone  --include-data-dir=GUI=GUI  --windows-disable-console  --show-memory --show-progress --plugin-enable=upx --include-plugin-files=Hotkeys\windowsHotkey.py
 ```
 
 
