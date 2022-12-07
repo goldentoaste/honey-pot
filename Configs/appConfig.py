@@ -7,7 +7,7 @@ if __name__ == "__main__":
 from Configs.ConfigManager import ConfigManager
 
 schema = {
-    "Scrollbar":{
+    "Style.Scrollbar":{
         "sScrollbarColor": "#A89984",
         "iScrollbarClickedAlpha": 255,
         "iScrollbarEnterAlpha": 150,

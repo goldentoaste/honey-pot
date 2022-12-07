@@ -7,9 +7,14 @@
     + make menu page for mardown editing and key bindings
     + skip notes management and list for now
 * separate global config by sections
+    * hotkey section (which is ready)
+    * general section (like lauch on start up for example)
+    * style section
+        * indicated by Style.section name
+        * have a drop down to select style set.
 
 * ConfigManger should generate its gui that modifies itself, base on current schema.    
-* Hotkey Manager should generate a gui to edit all the key bindings.
+* [x] Hotkey Manager should generate a gui to edit all the key bindings.
 
 * implement copying images in preview 
 * fix/hide QSpliiter when Editor is hidden and exiting editing mode.
