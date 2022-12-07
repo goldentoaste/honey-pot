@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>286</width>
-    <height>559</height>
+    <width>328</width>
+    <height>578</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -173,13 +173,18 @@
        </item>
        <item>
         <widget class="QPushButton" name="pushButton_4">
+         <property name="font">
+          <font>
+           <pointsize>11</pointsize>
+          </font>
+         </property>
          <property name="styleSheet">
           <string notr="true">QPushButton:hover:!pressed{
 	border: 1px solid #000000;
 }</string>
          </property>
          <property name="text">
-          <string/>
+          <string>Search</string>
          </property>
          <property name="icon">
           <iconset resource="stickyResource.qrc">

@@ -1,6 +1,6 @@
 import os
 from configparser import ConfigParser
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from PySide6.QtCore import QObject, Qt, QThread, Signal
 from PySide6.QtGui import QKeySequence, QShortcut
@@ -8,8 +8,7 @@ from PySide6.QtGui import QKeySequence, QShortcut
 
 class _BaseHotkeyManager(QObject):
 
-    hotkeysChnaged = Signal(QObject)  # emits self when hotkeys configs are changed.
-    updateHotkeySig = Signal(str, QKeySequence)
+    hotkeysChanged = Signal(QObject)  # emits self when hotkeys configs are changed.
 
     """
     This class should contains all the platform independent stuff, such as 
@@ -36,7 +35,7 @@ class _BaseHotkeyManager(QObject):
         self, parent: QObject, path: str, schema: Dict[str, Dict[str, str]], globals: List[str]
     ) -> None:
         super().__init__(parent)
-
+        self.schema = schema
         self.path = path
         self.config = ConfigParser()
         self.config.optionxform = str
@@ -66,9 +65,32 @@ class _BaseHotkeyManager(QObject):
         self.bindings: Dict[
             QObject, Dict[str, QShortcut]
         ] = {}  # a dict of objects mapped to a dict of their shortcuts
+        
+    
+    def getSection(self):
+        return list(self.schema.keys())
+    
+    def getBindings(self, section:str)-> List[Tuple[str, str]]:
+        return [(key,self.vals[key]) for key in self.schema[section].keys()]
+    
+    def resetBinding(self, name:str)->str:
+        '''
+        resets the binding the name corresponds to, then return the original keystring
+        '''
+        originalstr = self.schema[self.sections[name]][name]
+
+        if self.isGlobal(name):
+            self.updateGlobalBinding(name, originalstr)
+        else:
+            self.updateBinding(name, QKeySequence(originalstr))
+        return originalstr    
+        
 
     def bindGlobal(self, name: str, signal: Signal):
         raise NotImplementedError()
+
+    def isGlobal(self, name):
+        return name in self.globals
 
     def bindLocal(
         self,
@@ -96,6 +118,9 @@ class _BaseHotkeyManager(QObject):
             self.bindings[obj][name] = shortCut
         except KeyError:
             self.bindings[obj] = {name: shortCut}
+
+    def updateGlobalBinding(self, name:str, keyStr:str):
+        raise NotImplementedError()
 
     def updateBinding(self, name: str, seq: QKeySequence):
         # DOLATER maybe make this threaded in case it freezes gui

@@ -24,9 +24,17 @@ class WindowsHotkeyManager(_BaseHotkeyManager):
         self.workerThread.start()
         self.worker.startedSig.connect(self.threadStarted)
         self.worker.startSig.emit()
-
         self.threadId = -1
+        self.bindingRefs = {}
+        self.bindingId ={}
+        self.signalmap = {}
         QCoreApplication.instance().aboutToQuit.connect(self.cleanUp)
+        
+    @Slot(str, int, int, int)
+    def binded(self, name, id, keycode, modcode):
+        self.bindingRefs[name] = (keycode, modcode)
+        
+        self.bindingId [name] = id
 
     def cleanUp(self):
         # stop worker
@@ -36,6 +44,7 @@ class WindowsHotkeyManager(_BaseHotkeyManager):
     @Slot(int)
     def threadStarted(self, id):
         self.threadId = id
+        
 
     def bindGlobal(self, name: str, signal: Signal):
         keyStr = self.vals[name]
@@ -52,15 +61,41 @@ class WindowsHotkeyManager(_BaseHotkeyManager):
             modCode |= 0x0002
         if Qt.KeyboardModifier.ShiftModifier & keyMods:
             modCode |= 0x0004
-
-        self.worker.regNewHK.emit(keyCode, modCode, signal)
+            
+            
+        
+        if name in self.bindingRefs:
+            self.worker.unbindSig.emit(self.bindingId[name])
+            self.bindingRefs.pop(name)
+            self.bindingId.pop(name)
+        else:
+            self.worker.regNewHK.emit(keyCode, modCode, signal,name)
+            self.signalmap[name] = signal
+    
+    def updateGlobalBinding(self, name: str, keyStr: str):
+        self.vals[name]  = keyStr
+        self.config.set(self.sections[name], keyStr)
+        self.save()
+        
+        if name not in self.bindingRefs:
+            return
+        
+        self.worker.unbindSig.emit(self.bindingId[name])
+        self.bindingId.pop(name)
+        self.bindingRefs.pop(name)
+        
+        self.bindGlobal(name, self.signalmap[name])
+        
+        
 
 
 class Win32KeyWorker(QObject):
 
-    regNewHK = Signal(int, int, Signal)  # keycode, modcode, callback
+    regNewHK = Signal(int, int, Signal, str)  # keycode, modcode, callback
     startSig = Signal()
     startedSig = Signal(int)  # returns the thread id
+    idRegistered = Signal(int,str)
+    unbindSig = Signal(int)
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
@@ -68,14 +103,20 @@ class Win32KeyWorker(QObject):
         self.regNewHK.connect(self.regNewHotkey)
         self.bindings: Dict[int, Signal] = {}  # hotkey id mapped to signal to emit
         self.startSig.connect(self.run)
+        self.unbindSig.connect(self.unbindKey)
+    
+    @Slot(int)
+    def unbindKey(self, id):
+        print('unbind', id)
+        user32.UnregisterHotKey(None, id)
 
-    @Slot(int, int, Signal)
-    def regNewHotkey(self, keycode, modcode, callbackSignal):
+    @Slot(int, int, Signal,str)
+    def regNewHotkey(self, keycode, modcode, callbackSignal, name):
         self.index += 1
-
-        print(keycode, modcode)
+        print('new hk', keycode, modcode, name)
         if user32.RegisterHotKey(None, self.index, modcode, keycode):
             self.bindings[self.index] = callbackSignal
+            self.idRegistered.emit(name, self.index, keycode, modcode)
 
     def run(self) -> None:
         self.startedSig.emit(threading.get_ident())

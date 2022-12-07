@@ -3,7 +3,7 @@
 
 ## Current task:
 * implement some main menu features:
-    + make general layouting
+    + ~~make general layouting~~
     + make menu page for mardown editing and key bindings
     + skip notes management and list for now
 * separate global config by sections

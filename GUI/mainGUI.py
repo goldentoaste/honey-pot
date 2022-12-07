@@ -15,87 +15,136 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QCheckBox, QHBoxLayout, QLabel,
-    QLineEdit, QListView, QMainWindow, QSizePolicy,
-    QSpacerItem, QTabWidget, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QFrame, QHBoxLayout, QLineEdit,
+    QListView, QPushButton, QSizePolicy, QSpacerItem,
+    QVBoxLayout, QWidget)
+from  . import stickyResource_rc
 
-class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
-        if not MainWindow.objectName():
-            MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(344, 511)
-        self.centralwidget = QWidget(MainWindow)
-        self.centralwidget.setObjectName(u"centralwidget")
-        self.verticalLayout = QVBoxLayout(self.centralwidget)
-        self.verticalLayout.setObjectName(u"verticalLayout")
-        self.tabWidget = QTabWidget(self.centralwidget)
-        self.tabWidget.setObjectName(u"tabWidget")
-        self.tabWidget.setStyleSheet(u"QTabWidget::pane{\n"
-"	 border: 0 solid white;\n"
-"    margin: -9px -7px -9px -7px;\n"
-"}")
-        self.Notes = QWidget()
-        self.Notes.setObjectName(u"Notes")
-        self.verticalLayout_3 = QVBoxLayout(self.Notes)
-        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
-        self.noteList = QListView(self.Notes)
-        self.noteList.setObjectName(u"noteList")
-
-        self.verticalLayout_3.addWidget(self.noteList)
-
-        self.tabWidget.addTab(self.Notes, "")
-        self.Settings = QWidget()
-        self.Settings.setObjectName(u"Settings")
-        self.verticalLayout_2 = QVBoxLayout(self.Settings)
+class Ui_Form(object):
+    def setupUi(self, Form):
+        if not Form.objectName():
+            Form.setObjectName(u"Form")
+        Form.resize(328, 578)
+        self.verticalLayout_2 = QVBoxLayout(Form)
+        self.verticalLayout_2.setSpacing(0)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.checkBox = QCheckBox(self.Settings)
-        self.checkBox.setObjectName(u"checkBox")
+        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.frame = QFrame(Form)
+        self.frame.setObjectName(u"frame")
+        self.frame.setStyleSheet(u"QFrame{\n"
+"	background: #f0f000;\n"
+"}")
+        self.frame.setFrameShape(QFrame.StyledPanel)
+        self.frame.setFrameShadow(QFrame.Raised)
+        self.horizontalLayout = QHBoxLayout(self.frame)
+        self.horizontalLayout.setSpacing(0)
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
+        self.pushButton = QPushButton(self.frame)
+        self.pushButton.setObjectName(u"pushButton")
+        self.pushButton.setStyleSheet(u"QPushButton:hover:!pressed{\n"
+"	border: 1px solid #000000;\n"
+"}")
+        icon = QIcon()
+        icon.addFile(u":/GUI/add.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.pushButton.setIcon(icon)
+        self.pushButton.setIconSize(QSize(20, 20))
+        self.pushButton.setFlat(True)
 
-        self.verticalLayout_2.addWidget(self.checkBox)
+        self.horizontalLayout.addWidget(self.pushButton)
 
+        self.horizontalSpacer = QSpacerItem(270, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout.addItem(self.horizontalSpacer)
+
+        self.pushButton_3 = QPushButton(self.frame)
+        self.pushButton_3.setObjectName(u"pushButton_3")
+        self.pushButton_3.setStyleSheet(u"QPushButton:hover:!pressed{\n"
+"	border: 1px solid #000000;\n"
+"}")
+        icon1 = QIcon()
+        icon1.addFile(u":/GUI/settings.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.pushButton_3.setIcon(icon1)
+        self.pushButton_3.setIconSize(QSize(20, 20))
+        self.pushButton_3.setFlat(True)
+
+        self.horizontalLayout.addWidget(self.pushButton_3)
+
+        self.pushButton_2 = QPushButton(self.frame)
+        self.pushButton_2.setObjectName(u"pushButton_2")
+        self.pushButton_2.setStyleSheet(u"QPushButton:hover:!pressed{\n"
+"	border: 1px solid #000000;\n"
+"}")
+        icon2 = QIcon()
+        icon2.addFile(u":/GUI/close.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.pushButton_2.setIcon(icon2)
+        self.pushButton_2.setIconSize(QSize(20, 20))
+        self.pushButton_2.setFlat(True)
+
+        self.horizontalLayout.addWidget(self.pushButton_2)
+
+
+        self.verticalLayout_2.addWidget(self.frame)
+
+        self.verticalLayout = QVBoxLayout()
+        self.verticalLayout.setSpacing(0)
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.verticalLayout.setContentsMargins(4, -1, 4, 4)
         self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setSpacing(0)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.label = QLabel(self.Settings)
-        self.label.setObjectName(u"label")
-
-        self.horizontalLayout_2.addWidget(self.label)
-
-        self.lineEdit = QLineEdit(self.Settings)
+        self.lineEdit = QLineEdit(Form)
         self.lineEdit.setObjectName(u"lineEdit")
 
         self.horizontalLayout_2.addWidget(self.lineEdit)
 
-        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.pushButton_4 = QPushButton(Form)
+        self.pushButton_4.setObjectName(u"pushButton_4")
+        font = QFont()
+        font.setPointSize(11)
+        self.pushButton_4.setFont(font)
+        self.pushButton_4.setStyleSheet(u"QPushButton:hover:!pressed{\n"
+"	border: 1px solid #000000;\n"
+"}")
+        icon3 = QIcon()
+        icon3.addFile(u":/GUI/search.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.pushButton_4.setIcon(icon3)
+        self.pushButton_4.setIconSize(QSize(20, 20))
+        self.pushButton_4.setFlat(True)
 
-        self.horizontalLayout_2.addItem(self.horizontalSpacer_2)
-
-
-        self.verticalLayout_2.addLayout(self.horizontalLayout_2)
-
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-
-        self.verticalLayout_2.addItem(self.verticalSpacer)
-
-        self.tabWidget.addTab(self.Settings, "")
-
-        self.verticalLayout.addWidget(self.tabWidget)
-
-        MainWindow.setCentralWidget(self.centralwidget)
-
-        self.retranslateUi(MainWindow)
-
-        self.tabWidget.setCurrentIndex(0)
+        self.horizontalLayout_2.addWidget(self.pushButton_4)
 
 
-        QMetaObject.connectSlotsByName(MainWindow)
+        self.verticalLayout.addLayout(self.horizontalLayout_2)
+
+        self.widget = QWidget(Form)
+        self.widget.setObjectName(u"widget")
+        self.verticalLayout_3 = QVBoxLayout(self.widget)
+        self.verticalLayout_3.setSpacing(0)
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
+        self.listView = QListView(self.widget)
+        self.listView.setObjectName(u"listView")
+
+        self.verticalLayout_3.addWidget(self.listView)
+
+
+        self.verticalLayout.addWidget(self.widget)
+
+
+        self.verticalLayout_2.addLayout(self.verticalLayout)
+
+
+        self.retranslateUi(Form)
+
+        QMetaObject.connectSlotsByName(Form)
     # setupUi
 
-    def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Sticky Markdown", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Notes), QCoreApplication.translate("MainWindow", u"Notes", None))
-        self.checkBox.setText(QCoreApplication.translate("MainWindow", u"Run on Startup", None))
-        self.label.setText(QCoreApplication.translate("MainWindow", u"Background Color", None))
-        self.lineEdit.setText(QCoreApplication.translate("MainWindow", u"#FAF0C8", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Settings), QCoreApplication.translate("MainWindow", u"Settings", None))
+    def retranslateUi(self, Form):
+        Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
+        self.pushButton.setText("")
+        self.pushButton_3.setText("")
+        self.pushButton_2.setText("")
+        self.pushButton_4.setText(QCoreApplication.translate("Form", u"Search", None))
     # retranslateUi
 

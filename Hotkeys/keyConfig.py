@@ -32,11 +32,21 @@ schema = {
     },
 }
 
+description = {
+    "debugKey": "Just debug",
+    "wrapStars": "wrap selected markdown with *<text>* once",
+    "italic":"call wrapStars once, for italic in markdown",
+    "bold":"call wrapStar twice, for bold in markdown",
+    "strikeThrough":"wrap selected text or current line with ~~ for strike thorugh effect",
+    "title": 'insert a # at the beginning of current line',
+    "htmlSpace": "insert a &nbsp, a non breaking space."
+}
+
 
 def getKeyConfig(base=False):  # if base, then return a basekeymanager
     global config
     if not config:
-        args = (None, os.path.join(os.path.dirname(__file__), "hotkeys.ini"), schema, {})
+        args = (None, os.path.join(os.path.dirname(__file__), "hotkeys.ini"), schema, {Debugkey})
         if base:
             config = _BaseHotkeyManager(*args)
         else:
