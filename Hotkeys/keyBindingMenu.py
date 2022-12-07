@@ -1,7 +1,7 @@
 import os
 import sys
 
-from PySide6.QtCore import QObject, QPointF, Qt
+from PySide6.QtCore import QObject, QPointF, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtWidgets import (QApplication, QGridLayout, QHBoxLayout, QLabel,
                                QPushButton, QSizePolicy, QVBoxLayout, QWidget)
@@ -34,6 +34,9 @@ class Divider(QWidget):
 
 
 class KeyBindingMenu(QWidget):
+    
+    testSig = Signal()
+    testSig2 = Signal()
     def __init__(
         self,
         parent: QObject = None,
@@ -73,7 +76,16 @@ class KeyBindingMenu(QWidget):
                 layout.addWidget(Divider(None, Qt.GlobalColor.black))
 
         self.setLayout(layout)
+        QTimer.singleShot(0, self.setFocus)
+        QTimer.singleShot(4000, self.testing)
 
+        self.config.bindGlobal("debugKey", self.testSig)
+        self.testSig.connect(lambda:print("WOWOWOWO"))
+        
+    def testing(self):
+        print("startting testing")
+        self.config.bindGlobal("debugKey2", self.testSig2)
+        self.testSig2.connect(lambda:print("2222222"))
 
 if __name__ == "__main__":
 

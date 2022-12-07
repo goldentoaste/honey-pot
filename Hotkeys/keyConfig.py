@@ -21,7 +21,7 @@ Htmlspace = "htmlSpace"
 
 
 schema = {
-    "debug": {"debugKey": "Ctrl+Alt+50"},
+    "debug": {"debugKey": "Ctrl+Alt+50", "debugKey2": "Ctrl+65"},
     "Markdown Editor": {
         "wrapStars": "Ctrl+8",
         "italic": "Ctrl+I",  # behaves the same as wrapStars, does not check for too many stars for now
@@ -33,6 +33,7 @@ schema = {
 }
 
 description = {
+    "debugKey2":"stuff",
     "debugKey": "Just debug",
     "wrapStars": "wrap selected markdown with *<text>* once",
     "italic":"call wrapStars once, for italic in markdown",
@@ -46,7 +47,7 @@ description = {
 def getKeyConfig(base=False):  # if base, then return a basekeymanager
     global config
     if not config:
-        args = (None, os.path.join(os.path.dirname(__file__), "hotkeys.ini"), schema, {Debugkey})
+        args = (None, os.path.join(os.path.dirname(__file__), "hotkeys.ini"), schema, {Debugkey, "debugKey2"})
         if base:
             config = _BaseHotkeyManager(*args)
         else:

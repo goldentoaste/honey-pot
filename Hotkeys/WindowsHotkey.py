@@ -23,6 +23,7 @@ class WindowsHotkeyManager(_BaseHotkeyManager):
         self.worker.moveToThread(self.workerThread)
         self.workerThread.start()
         self.worker.startedSig.connect(self.threadStarted)
+        self.worker.idRegistered.connect(self.binded)
         self.worker.startSig.emit()
         self.threadId = -1
         self.bindingRefs = {}
@@ -64,6 +65,7 @@ class WindowsHotkeyManager(_BaseHotkeyManager):
             
             
         
+        print("sending sig")
         if name in self.bindingRefs:
             self.worker.unbindSig.emit(self.bindingId[name])
             self.bindingRefs.pop(name)
@@ -74,7 +76,8 @@ class WindowsHotkeyManager(_BaseHotkeyManager):
     
     def updateGlobalBinding(self, name: str, keyStr: str):
         self.vals[name]  = keyStr
-        self.config.set(self.sections[name], keyStr)
+        print("hlep", name, keyStr, type(name), type(keyStr), name not in self.bindingRefs)
+        self.config.set(self.sections[name],name, keyStr)
         self.save()
         
         if name not in self.bindingRefs:
@@ -94,7 +97,7 @@ class Win32KeyWorker(QObject):
     regNewHK = Signal(int, int, Signal, str)  # keycode, modcode, callback
     startSig = Signal()
     startedSig = Signal(int)  # returns the thread id
-    idRegistered = Signal(int,str)
+    idRegistered = Signal(str, int, int, int)
     unbindSig = Signal(int)
 
     def __init__(self, parent=None) -> None:
