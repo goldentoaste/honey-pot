@@ -73,6 +73,8 @@ class KeyBindingMenu(QWidget):
                 layout.addWidget(Divider(None, Qt.GlobalColor.black))
 
         self.setLayout(layout)
+        
+    
 
 
 

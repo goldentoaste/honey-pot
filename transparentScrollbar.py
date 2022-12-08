@@ -63,7 +63,7 @@ class TransScrollBar(QWidget):
         self.barColor.setAlpha(self.fade)
         self.clickedAlpha = config.iScrollbarClickedAlpha
         self.enterAlpha = config.iScrollbarEnterAlpha
-        self.hoverAlpha = config.iScrollbarHoverAlpha
+
         self.barWidth = config.iScrollbarThickness
         self.minBarSize=  config.iScrllbarMinSize
     
@@ -175,7 +175,7 @@ class TransScrollBar(QWidget):
         
     def mouseReleaseEvent(self, event) -> None:
         
-        self.fade = self.hoverAlpha
+        self.fade = self.enterAlpha
         self.barColor.setAlpha(self.fade)
         self.repaint()
 
