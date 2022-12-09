@@ -16,6 +16,9 @@ schema = {
         "bScrollbarUseFade":True,
         "iScrollbarThickness": 18,
         "iScrllbarMinSize" : 30,
+    },
+    "Hidden":{ # just state keeping vars
+        "sLastColor":"#000000"
     }
 }
 

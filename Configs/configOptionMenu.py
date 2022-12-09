@@ -1,8 +1,8 @@
 
 from Configs.appConfig import Option, getAppConfig, intType, boolType, colorType
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QToolButton, QSizePolicy, QLineEdit, QCheckBox, QSizePolicy 
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QToolButton, QSizePolicy, QLineEdit, QCheckBox, QSizePolicy , QColorDialog, QSlider
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPageSize
+
 class OptionHolder(QWidget):
     
     def __init__(self,opt:Option ,*args, **kwargs) -> None:
@@ -60,11 +60,22 @@ class ColorField(OptionHolder):
         self.inputField.setValidator(self.opt.validator)
         self.colorButton = QToolButton()
         self.colorButton.setSizePolicy(QSizePolicy.Policy.Preferred,QSizePolicy.Policy.Preferred)
-    
+        self.colorButton.clicked.connect(self.showColorPicker)
+        self.inputField.setInputMask('\#HHHHHH')
+        self.inputField.editingFinished.connect(lambda:self.setColor(self.inputField.text()))
+
+        self.hlayout.insertItem(0, self.colorButton)
+        self.hlayout.insertItem(0, self.inputField)
+        
+        
     def showColorPicker(self):
         '''
         show a color picker when the color button is clicked.
         '''
+        c = QColorDialog.getColor(self.config.sLastColor, self.parent())
+        
+        if c is not None and c.isValid():
+            self.setColor(c.name())
     
     def setColor(self, colorStr:str):
         if not colorStr:
@@ -78,3 +89,12 @@ class ColorField(OptionHolder):
             '''
         )
         self.config[self.opt.varName, colorStr]
+        
+        
+class IntField(OptionHolder):
+    
+    
+    def __init__(self, opt: Option, *args, **kwargs) -> None:
+        super().__init__(opt, *args, **kwargs)
+        
+        self.inputSlider = QSlider
