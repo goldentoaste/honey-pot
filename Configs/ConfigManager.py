@@ -33,7 +33,7 @@ class ConfigManager(QObject):
     def __init__(self, parent: QObject, path: str, schema: Dict[str, Tuple[str, Any]], listSep="@@"):
 
         super().__init__(parent)
-
+        self.schema = schema
         self.path = path  # place to save the config file
         self.listSep: str = listSep
 
@@ -65,7 +65,22 @@ class ConfigManager(QObject):
         self.loaded = True
         
         self.save()
-
+        
+    def getSections(self):
+        return [key for key in self.schema]
+    
+    def getOptions(self, sectionName:str):
+        return [key for key in self.schema[sectionName]]
+    
+    def getDefault(self, optName:str):
+        return self.schema[self.secs[optName]][optName]
+    
+    def getValue(self, name):
+        return self[name]
+    
+    def setValue(self, name, val):
+        self[name] = val
+    
     def setMultipleVars(self, updates: Dict[str, Any]):
         """
         used to update multiple variables, without calling save for each var

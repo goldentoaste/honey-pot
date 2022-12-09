@@ -6,6 +6,8 @@
     + ~~make general layouting~~
     + make menu page for mardown editing and key bindings
     + skip notes management and list for now
+
+    
 * separate global config by sections
     * hotkey section (which is ready)
     * general section (like lauch on start up for example)
@@ -26,7 +28,6 @@
     - (done)ctrl B to make selection Bold (wrapping * twice)
     - (done)ctrl `(~) to cross out current selection (wrap ~ twice)
     - (done)ctrl 3(#) to append 1 # at the beginning of current line
-    
     - ctrl space to insert `&nbsp;` once as non removing space (although it seems like Qt preserves space. :/)
                     - maybe a key to make inserting image link or text link quicker, not decided yet.
 
