@@ -1,20 +1,22 @@
 import ctypes
 import os
+import sys
 from threading import Thread
 from time import sleep, time
 from typing import Dict, Literal, Tuple
 
-from PySide6.QtCore import (QEvent, QMargins, QPoint, QRect, QSizeF, Qt, 
+from PySide6.QtCore import (QEvent, QMargins, QPoint, QRect, QSizeF, Qt,
                             QThread, QUrl, Signal)
-from PySide6.QtGui import (QFont, QFontDatabase, QFontMetrics, QIcon, QImage, QCursor,
-                           QMouseEvent, QPixmap, QTextBlock, QTextDocument, QShortcut, QKeySequence)
+from PySide6.QtGui import (QCursor, QFont, QFontDatabase, QFontMetrics, QIcon,
+                           QImage, QKeySequence, QMouseEvent, QPixmap,
+                           QShortcut, QTextBlock, QTextDocument)
 from PySide6.QtWidgets import QApplication, QFrame, QWidget
 
 from GUI.noteGUI import Ui_Note
-from imageCache import CacheManager
-from utils import  getPath
-import sys
 from Hotkeys.keyConfig import getKeyConfig
+from imageCache import CacheManager
+from utils import getPath
+
 user32 = ctypes.windll.user32
 
 
@@ -30,12 +32,10 @@ right = 3
 c = Qt.CursorShape
 
 
-
-
 class ScaleableWindowFrame(QWidget):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        
+
         self.setMouseTracking(True)
         self.prevDir = (None, None)
         self.lastPos: QPoint = None
@@ -45,7 +45,7 @@ class ScaleableWindowFrame(QWidget):
         #     -16,
         #     0x00840000,
         # )
-        self.setWindowFlags(Qt.WindowType.Window| Qt.WindowType.FramelessWindowHint)
+        self.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.FramelessWindowHint)
 
     directionCursor: Dict[Tuple[int, int], Qt.CursorShape] = {
         (top, left): c.SizeFDiagCursor,
@@ -90,23 +90,39 @@ class ScaleableWindowFrame(QWidget):
 
         methods = {
             (top, left): lambda: (
-                self.setGeometry(QRect(self.pos() + QPoint(dx, dy), self.size().grownBy(QMargins(0, 0, -dx, -dy))))
+                self.setGeometry(
+                    QRect(self.pos() + QPoint(dx, dy), self.size().grownBy(QMargins(0, 0, -dx, -dy)))
+                )
             ),
             (top, None): lambda: (
-                self.setGeometry(QRect(self.pos() + QPoint(0, dy), self.size().grownBy(QMargins(0, 0, 0, -dy))))
+                self.setGeometry(
+                    QRect(self.pos() + QPoint(0, dy), self.size().grownBy(QMargins(0, 0, 0, -dy)))
+                )
             ),
             (top, right): lambda: (
-                self.setGeometry(QRect(self.pos() + QPoint(0, dy), self.size().grownBy(QMargins(0, 0, dx, -dy))))
+                self.setGeometry(
+                    QRect(self.pos() + QPoint(0, dy), self.size().grownBy(QMargins(0, 0, dx, -dy)))
+                )
             ),
             (None, left): lambda: (
-                self.setGeometry(QRect(self.pos() + QPoint(dx, 0), self.size().grownBy(QMargins(0, 0, -dx, 0))))
+                self.setGeometry(
+                    QRect(self.pos() + QPoint(dx, 0), self.size().grownBy(QMargins(0, 0, -dx, 0)))
+                )
             ),
-            (None, right): lambda: (self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, dx, 0))))),
+            (None, right): lambda: (
+                self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, dx, 0))))
+            ),
             (bot, left): lambda: (
-                self.setGeometry(QRect(self.pos() + QPoint(dx, 0), self.size().grownBy(QMargins(0, 0, -dx, dy))))
+                self.setGeometry(
+                    QRect(self.pos() + QPoint(dx, 0), self.size().grownBy(QMargins(0, 0, -dx, dy)))
+                )
             ),
-            (bot, None): lambda: (self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, 0, dy))))),
-            (bot, right): lambda: (self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, dx, dy))))),
+            (bot, None): lambda: (
+                self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, 0, dy))))
+            ),
+            (bot, right): lambda: (
+                self.setGeometry(QRect(self.pos(), self.size().grownBy(QMargins(0, 0, dx, dy))))
+            ),
             (None, None): lambda: (),
         }
 
@@ -216,16 +232,13 @@ def ignoreEdgeDrag(target: QWidget, parent: ScaleableWindowFrame, borderSize: in
     target.mouseReleaseEvent = makeReplacementEvent(eventType="release")
 
 
-def cursorResetZone(target : QWidget):
+def cursorResetZone(target: QWidget):
     original = target.enterEvent
-    
-    
+
     def resetCursor(a0):
         target.setCursor(QCursor())
         original(a0)
-    
 
-        
     target.enterEvent = resetCursor
 
 
@@ -238,10 +251,16 @@ def ignoreHover(ob: QWidget) -> QWidget:
 
 class Note(Ui_Note, ScaleableWindowFrame):
     testSig = Signal()
-    def __init__(self, filePath: str, cacheManager: CacheManager, markdown: str = None,) -> None:
+
+    def __init__(
+        self,
+        filePath: str,
+        cacheManager: CacheManager,
+        markdown: str = None,
+    ) -> None:
         super().__init__()
         self.setupUi(self)
-        
+
         self.cacheManager = cacheManager
         self.filePath = filePath
         if not os.path.isfile(filePath):
@@ -274,7 +293,6 @@ class Note(Ui_Note, ScaleableWindowFrame):
         self.preview.setUndoRedoEnabled(False)
         self.preview.setAcceptRichText(False)
 
-
     def setupEvents(self):
         self.setMouseTracking(True)
         self.editor.textChanged.connect(lambda: setattr(self, "needUpdate", True))
@@ -296,13 +314,11 @@ class Note(Ui_Note, ScaleableWindowFrame):
         # ignoreEdgeDrag(self.editor, self, ignoreMargin)
         # x = (ignoreHover(item) for item in (self.pinButton, self.newNoteButton, self.editButton, self.minimizeButton, self.closeButton, self.frame))
 
-
-        #debug
+        # debug
         c = getKeyConfig()
         c.bindGlobal("debugKey", self.testSig)
-        self.testSig.connect(lambda:print("asdasdasdasdasddasdasdasdasd"))
+        self.testSig.connect(lambda: print("asdasdasdasdasddasdasdasdasd"))
 
-        
     def setupStyles(self):
         # fonts stuff
         QFontDatabase.addApplicationFont(r"..\\GUI\\Roboto-Regular.ttf")
@@ -355,8 +371,8 @@ class Note(Ui_Note, ScaleableWindowFrame):
             self.savingDone = False
             with open(self.filePath, "w", encoding="utf-8") as f:
                 f.write(self.markdown)
-                
-            with open("test.html", 'w', encoding='utf-8') as f:
+
+            with open("test.html", "w", encoding="utf-8") as f:
                 f.write(self.preview.toHtml())
             self.savingDone = True
 
@@ -473,7 +489,9 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     n = Note(
-        r"C:\Testing\test.md", CacheManager(r"C:\Testing\cache", 5), "",
+        r"C:\Testing\test.md",
+        CacheManager(r"C:\Testing\cache", 5),
+        "",
     )
     n.show()
 

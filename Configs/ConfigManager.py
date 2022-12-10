@@ -44,7 +44,6 @@ class ConfigManager(QObject):
         self.secs: Dict[str, str] = {}  # var name mapped to section name
 
         ##### initializing
-        needToSave = False  # if any changes has occured
         if os.path.isfile(path):
             self.config.read(path)
 
@@ -71,6 +70,15 @@ class ConfigManager(QObject):
     
     def getOptions(self, sectionName:str):
         return [key for key in self.schema[sectionName]]
+    
+    def resetToDefault(self, optName:str) -> str:
+        '''
+        returns the original value
+        '''
+        val = self.schema[self.secs[optName]][optName]
+        self[optName] =  val
+        return val
+        
     
     def getDefault(self, optName:str):
         return self.schema[self.secs[optName]][optName]

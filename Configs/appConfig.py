@@ -1,109 +1,124 @@
+import os
+import sys
+from typing import Any, Literal
 
-import sys, os
-from typing import Literal, Any
 if __name__ == "__main__":
     print(os.path.abspath(f"{os.path.dirname(__file__)}\\.."))
     sys.path.append(os.path.abspath(f"{os.path.dirname(__file__)}\\.."))
-from Configs.ConfigManager import ConfigManager
 from dataclasses import dataclass
-from PySide6.QtGui import QValidator,QRegularExpressionValidator , QIntValidator
+from enum import Enum
+
 from PySide6.QtCore import QRegularExpression
+from PySide6.QtGui import (QIntValidator, QRegularExpressionValidator,
+                           QValidator)
+
+from Configs.ConfigManager import ConfigManager
+
 schema = {
-    "Style.Scrollbar":{
+    "Style.Scrollbar": {
         "sScrollbarColor": "#A89984",
         "iScrollbarClickedAlpha": 255,
         "iScrollbarHoverAlpha": 200,
-        "bScrollbarUseFade":True,
+        "bScrollbarUseFade": True,
         "iScrollbarThickness": 18,
-        "iScrllbarMinSize" : 30,
+        "iScrllbarMinSize": 30,
     },
-    "Hidden":{ # just state keeping vars
-        "sLastColor":"#000000"
-    }
+    "Hidden": {"sLastColor": "#000000"},  # just state keeping vars
 }
 
-colorType = 0
-fileType = 1
-intType = 2
-boolType = 3
-floatType = 4
-stringType = 5
+
+class OptType(int, Enum):
+    colorType = 0
+    fileType = 1
+    intType = 2
+    boolType = 3
+    floatType = 4
+    stringType = 5
+
+
 @dataclass
 class Option:
-    varName:str
-    repName:str
-    desc:str
-    type: int
-    validator:QValidator
-    
+    varName: str
+    repName: str
+    desc: str
+    type: OptType
+    validator: QValidator
+    additional: Any = None # this field is used to storage additional data, like selectable vals for a selector field
 
-colorValidator = QRegularExpressionValidator (QRegularExpression(r"#[0-9a-f]{6}", QRegularExpression.PatternOption.CaseInsensitiveOption))
+
+colorValidator = QRegularExpressionValidator(
+    QRegularExpression(r"#[0-9a-f]{6}", QRegularExpression.PatternOption.CaseInsensitiveOption)
+)
 ubyteValidator = QIntValidator(0, 255)
 
 # special hinting for each option
 optionSchema = [
-   Option(
+    Option(
         "sScrollbarColor",
         "Color",
         "Primary color of the scrollbars in markdown editor and preview.",
-        colorType,
-        colorValidator
+        OptType.colorType,
+        colorValidator,
     ),
     Option(
-        'iScrollbarClickedAlpha',
+        "iScrollbarClickedAlpha",
         "Clicked Alpha",
         "Alpha of the bar when clicked down.",
-        intType,
-        ubyteValidator
+        OptType.intType,
+        ubyteValidator,
     ),
     Option(
-        'iScrollbarEnterAlpha',
+        "iScrollbarEnterAlpha",
         "Entered Alpha",
         "Alpha of the bar when mouse cursor has entered the scroll area.",
-        intType,
-        ubyteValidator
+        OptType.intType,
+        ubyteValidator,
     ),
-    
     Option(
-        'iScrollbarUseFade',
+        "iScrollbarUseFade",
         "Enable Fade",
         "If the scrollbar should fade to transparent when cursor leaves the area. Unchecked means scrollbar is always visible.",
-        boolType,
-        None
+        OptType.boolType,
+        None,
     ),
     Option(
-        'iScrollbarThickness',
+        "iScrollbarThickness",
         "Thickness",
         "Thickness/width of the scrollbar",
-        intType,
-        QIntValidator(5, 30)
+        OptType.intType,
+        QIntValidator(5, 30),
     ),
     Option(
-        'iScrollbarMinSize',
+        "iScrollbarMinSize",
         "Min Size",
         "Minimal Size/height of the scrollbar.",
-        intType,
-        QIntValidator(15, 100)
+        OptType.intType,
+        QIntValidator(15, 100),
     ),
 ]
+
+
 class Config(ConfigManager):
 
-    sScrollbarColor : str
-    iScrollbarClickedAlpha : int
-    iScrollbarEnterAlpha : int
-    bScrollbarUseFade : bool
-    iScrollbarThickness : int
-    iScrllbarMinSize : int
-    
-config : Config= None
+    sScrollbarColor: str
+    iScrollbarClickedAlpha: int
+    iScrollbarEnterAlpha: int
+    bScrollbarUseFade: bool
+    iScrollbarThickness: int
+    iScrllbarMinSize: int
+
+
+config: Config = None
+
 
 def getAppConfig():
-    global config 
-    
+    global config
+
     if config is None:
         config = ConfigManager(None, os.path.join(os.path.dirname(__file__), "testConfig.ini"), schema, ",")
-    
+
     return config
+
 
 if __name__ == "__main__":
     getAppConfig().makeTypeHintClass("Config")
