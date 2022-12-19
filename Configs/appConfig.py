@@ -18,11 +18,16 @@ schema = {
     "Style.Scrollbar": {
         "sScrollbarColor": "#A89984",
         "iScrollbarClickedAlpha": 255,
-        "iScrollbarHoverAlpha": 200,
+        "iScrollbarEnterAlpha": 200,
         "bScrollbarUseFade": True,
         "iScrollbarThickness": 18,
-        "iScrllbarMinSize": 30,
+        "iScrollbarMinSize": 30,
     },
+    
+    "Testing":{
+        
+        "sTestingVar1":"asdsa"
+        },
     "Hidden": {"sLastColor": "#000000"},  # just state keeping vars
 }
 
@@ -75,7 +80,7 @@ optionSchema = [
         ubyteValidator,
     ),
     Option(
-        "iScrollbarUseFade",
+        "bScrollbarUseFade",
         "Enable Fade",
         "If the scrollbar should fade to transparent when cursor leaves the area. Unchecked means scrollbar is always visible.",
         OptType.boolType,
@@ -100,12 +105,14 @@ optionSchema = [
 
 class Config(ConfigManager):
 
-    sScrollbarColor: str
-    iScrollbarClickedAlpha: int
-    iScrollbarEnterAlpha: int
-    bScrollbarUseFade: bool
-    iScrollbarThickness: int
-    iScrllbarMinSize: int
+    sScrollbarColor : str
+    iScrollbarClickedAlpha : int
+    iScrollbarEnterAlpha : int
+    bScrollbarUseFade : bool
+    iScrollbarThickness : int
+    iScrollbarMinSize : int
+    sTestingVar1 : str
+    sLastColor : str
 
 
 config: Config = None

@@ -61,10 +61,22 @@ class ConfigManager(QObject):
                 self.vals[option] = self.loadVar(section, option)
                 self.secs[option] = section
 
+        self.shouldSave = True 
         self.loaded = True
+        
+       
         
         self.save()
         
+    def getSectionOfVar(self, name):
+        return self.secs[name]
+        
+    def disableSave(self):
+        self.shouldSave = False
+    
+    def enableSave(self):
+        self.shouldSave = True
+    
     def getSections(self):
         return [key for key in self.schema]
     
@@ -157,6 +169,8 @@ class ConfigManager(QObject):
         return str(val) if name[0] != "l" else self.listSep.join([str(item) for item in val])
 
     def save(self):
+        if not self.shouldSave:
+            return
         if not os.path.isdir(os.path.dirname(self.path)):
             os.makedirs(os.path.dirname(self.path))
         with open(self.path, "w", encoding="utf-8") as file:

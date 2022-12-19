@@ -1,13 +1,18 @@
 from typing import Dict, List
+import sys, os
 
+if __name__ == "__main__":
+    print(os.path.abspath(f"{os.path.dirname(__file__)}\\.."))
+    sys.path.append(os.path.abspath(f"{os.path.dirname(__file__)}\\.."))
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIntValidator
-from PySide6.QtWidgets import (QCheckBox, QColorDialog, QGridLayout,
-                               QHBoxLayout, QLabel, QLineEdit, QSizePolicy, QComboBox,
-                               QSlider, QToolButton, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QCheckBox, QColorDialog, QComboBox, QGridLayout,
+                               QHBoxLayout, QLabel, QLineEdit, QSizePolicy,
+                               QSlider, QToolButton, QVBoxLayout, QWidget, QApplication, QSpinBox, QSpacerItem)
 
 from Configs.appConfig import Option, OptType, getAppConfig
-
+from GUI.divider import Divider
+import sys
 
 class OptionHolder(QWidget):
     def __init__(self, opt: Option, *args, **kwargs) -> None:
@@ -20,11 +25,10 @@ class OptionHolder(QWidget):
 
         self.resetButton = QToolButton()
         self.resetButton.setText("Reset")
-        self.resetButton.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+        self.resetButton.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
         self.resetButton.clicked.connect(self.resetValue)
 
         self.hlayout.addWidget(self.resetButton)
-
         self.setLayout(self.hlayout)
 
     def resetValue(self):
@@ -39,6 +43,20 @@ class OptionHolder(QWidget):
         label.setToolTip(self.opt.desc)
         return label
 
+    def save(self):
+        raise NotImplementedError()
+
+
+class StrField(OptionHolder):
+    def __init__(self, opt: Option, *args, **kwargs) -> None:
+        super().__init__(opt, *args, **kwargs)
+
+        self.inputField = QLineEdit(self.config[self.opt])
+        self.hlayout.insertWidget(0,self.inputField)
+
+    def save(self):
+        self.config[self.opt.varName] = self.inputField.text()
+
 
 class BoolField(OptionHolder):
     def __init__(self, opt: Option, *args, **kwargs) -> None:
@@ -47,12 +65,12 @@ class BoolField(OptionHolder):
         self.checkBox = QCheckBox()
         self.checkBox.setChecked(self.config[self.opt.varName])  # pray the type matches
         self.hlayout.insertWidget(0, self.checkBox)
-        self.checkBox.stateChanged.connect(
-            lambda newState: self.config.setValue(self.opt.varName, newState != Qt.CheckState.Unchecked)
-        )
 
     def resetValue(self):
         self.checkBox.setChecked(self.config.getDefault(self.opt.varName))
+
+    def save(self):
+        self.config.setValue(self.opt.varName, self.checkBox.checkState() != Qt.CheckState.Unchecked)
 
 
 class ColorField(OptionHolder):
@@ -67,14 +85,16 @@ class ColorField(OptionHolder):
         self.inputField.setInputMask(r"\#HHHHHH")
         self.inputField.editingFinished.connect(lambda: self.setColor(self.inputField.text()))
 
-        self.hlayout.insertItem(0, self.colorButton)
-        self.hlayout.insertItem(0, self.inputField)
+        self.hlayout.insertWidget(0, self.colorButton)
+        self.hlayout.insertWidget(0, self.inputField)
+        
+        self.setColor(self.inputField.text())
 
     def showColorPicker(self):
         """
         show a color picker when the color button is clicked.
         """
-        c = QColorDialog.getColor(self.config.sLastColor, self.parent())
+        c = QColorDialog.getColor(self.inputField.text(), self.parent())
 
         if c is not None and c.isValid():
             self.setColor(c.name())
@@ -90,7 +110,9 @@ class ColorField(OptionHolder):
             }}
             """
         )
-        self.config[self.opt.varName, colorStr] = colorStr
+
+    def save(self):
+        self.config[self.opt.varName] = self.inputField.text()
 
     def resetValue(self):
         self.setColor(self.config.resetToDefault(self.opt.varName))
@@ -101,80 +123,111 @@ class IntField(OptionHolder):
         super().__init__(opt, *args, **kwargs)
 
         self.inputSlider = QSlider(Qt.Orientation.Horizontal)
-        self.inputField = QLineEdit()
-
+        self.inputField = QSpinBox()
+        
+    
         val: QIntValidator = self.opt.validator
 
         self.inputSlider.setRange(val.bottom(), val.top())
-        self.inputField.setValidator(val)
+        self.inputField.setMaximum(val.top())
+        self.inputField.setMinimum(val.bottom())
 
         self.inputSlider.setValue(self.config[self.opt.varName])
-        self.inputField.setText(str(self.config[self.opt.varName]))
+        self.inputField.setValue(self.config[self.opt.varName])
 
-        self.inputField.editingFinished.connect(
-            lambda: (
-                self.inputSlider.setValue(int(self.inputField.text())),
-                self.config.setValue(self.opt.varName, int(self.inputField.text())),
-            )
-        )
+        self.inputField.editingFinished.connect(lambda: (self.inputSlider.setValue(self.inputField.value())))
 
-        self.sliderMoved.connect(
-            lambda: (
-                self.inputField.setText(str(self.inputField.text())),
-                self.config.setValue(self.opt.varName, self.inputField.text()),
-            )
-        )
+        self.inputSlider.sliderMoved.connect(lambda: (self.inputField.setValue(self.inputSlider.value())))
+        
+        self.hlayout.insertWidget(0,self.inputField)
+        self.hlayout.insertWidget(0,self.inputSlider)
+        
 
     def resetValue(self):
         val = self.config.resetToDefault(self.opt.varName)
-        self.inputField.setText(str(val))
+        self.inputField.setValue(val)
         self.inputSlider.setValue(val)
 
+    def save(self):
+        self.config.setValue(self.opt.varName, int(self.inputField.text()))
+
+
 class SelectorField(OptionHolder):
-    
     def __init__(self, opt: Option, *args, **kwargs) -> None:
         super().__init__(opt, *args, **kwargs)
-        
-        self.schema : Dict[str, str] = opt.additional # in the form of {'rep name' : <val>, ...}
-        self.reverse = {val:key for key, val in self.schema.items()}
+
+        self.schema: Dict[str, str] = opt.additional  # in the form of {'rep name' : <val>, ...}
+        self.reverse = {val: key for key, val in self.schema.items()}
         self.combo = QComboBox()
         self.combo.addItems(list(self.schema.keys()))
         self.combo.setCurrentText(str(self.reverse[self.config[self.opt.varName]]))
-        self.combo.currentTextChanged.connect(lambda t:self.config.setValue(self.opt.varName, self.schema[t]))
-        self.hlayout.insertItem(0, self.combo)
-    
-    
+        self.hlayout.insertWidget(0, self.combo)
+
     def resetValue(self):
         val = self.config.resetToDefault(self.opt.varName)
         self.combo.setCurrentText(self.reverse[val])
+
+    def save(self):
+        self.config.setValue(self.opt.varName, self.schema[self.combo.currentText()])
 
 
 class ConfigOptionMenu(QWidget):
     def __init__(self, parent: QWidget = None, schema: List[Option] = None):
         super().__init__(parent)
-        
+
         mainLayout = QVBoxLayout()
-        mainLayout.setContentsMargins(0,0,0,0)
-        
-        
-        optLayout = QGridLayout()
-        optLayout.setContentsMargins(0,0,0,0)
+        # mainLayout.setContentsMargins(0, 0, 0, 0)
 
-        for i, opt in enumerate(schema):
-            w = None
+        # divide to each section
 
-            match opt.type:
-                case OptType.intType:
-                    w = IntField(opt)
-                case OptType.colorType:
-                    w = ColorField(opt)
-                case OptType.boolType:
-                    w = BoolField(opt)
-                case _:
-                    raise NotImplementedError()
-                
-            label = QLabel(opt.repName)
-            label.setToolTip(opt.desc)
+        self.config = getAppConfig()
+        sections: Dict[str, List[Option]] = {section: [] for section in self.config.getSections()}
+        
+        print(sections)
+        print("----")
+        for opt in schema:
+            print(self.config.getSectionOfVar(opt.varName))
+            sections[self.config.getSectionOfVar(opt.varName)].append(opt)
+
+        # removing empty sections
+        sections = {key : val for key,val in sections.items() if val}
+
+        self.optWidgets: List[OptionHolder] = []
+
+        for index, section in enumerate(sections):
+            mainLayout.addWidget(QLabel(section))
+
+            optLayout = QGridLayout()
+            optLayout.setContentsMargins(0, 0, 0, 0)
+            optLayout.setVerticalSpacing(0)
+            mainLayout.addLayout(optLayout)
+            for i, opt in enumerate(schema):
+                w = None
+                match opt.type:
+                    case OptType.intType:
+                        w = IntField(opt)
+                    case OptType.colorType:
+                        w = ColorField(opt)
+                    case OptType.boolType:
+                        w = BoolField(opt)
+                    case _:
+                        raise NotImplementedError()
+                label = QLabel(opt.repName)
+                label.setToolTip(opt.desc)
+
+                optLayout.addWidget(label, i, 0)
+                optLayout.addWidget(w, i, 1)
+
+            if index < len(sections)-1:
+                mainLayout.addWidget(Divider())
             
-            optLayout.addWidget(label, i, 0)
-            optLayout.addWidget(w, i, 1)
+        mainLayout.addItem(QSpacerItem(0,0,QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding ))
+        self.setLayout(mainLayout)
+        
+if __name__ == '__main__':
+    from appConfig import optionSchema
+    a = QApplication(sys.argv)
+    w = ConfigOptionMenu(None, optionSchema)
+    
+    w.show()
+    a.exec()
