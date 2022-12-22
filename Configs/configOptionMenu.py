@@ -8,7 +8,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QIntValidator
 from PySide6.QtWidgets import (QCheckBox, QColorDialog, QComboBox, QGridLayout,
                                QHBoxLayout, QLabel, QLineEdit, QSizePolicy,
-                               QSlider, QToolButton, QVBoxLayout, QWidget, QApplication, QSpinBox, QSpacerItem)
+                               QSlider, QToolButton, QVBoxLayout, QWidget, QApplication, QSpinBox, QSpacerItem, QScrollArea)
 
 from Configs.appConfig import Option, OptType, getAppConfig
 from GUI.divider import Divider
@@ -57,6 +57,8 @@ class StrField(OptionHolder):
     def save(self):
         self.config[self.opt.varName] = self.inputField.text()
 
+    def resetValue(self):
+        self.inputField.setText(self.config.resetToDefault(self.opt.varName))
 
 class BoolField(OptionHolder):
     def __init__(self, opt: Option, *args, **kwargs) -> None:
@@ -174,6 +176,12 @@ class SelectorField(OptionHolder):
 class ConfigOptionMenu(QWidget):
     def __init__(self, parent: QWidget = None, schema: List[Option] = None):
         super().__init__(parent)
+        
+        self.parentLayout = QHBoxLayout()
+        
+        self.scrollArea = QScrollArea()
+        self.scrollHolder = QWidget()
+        self.scrollArea.setWidget(self.scrollHolder)
 
         mainLayout = QVBoxLayout()
         # mainLayout.setContentsMargins(0, 0, 0, 0)
@@ -182,11 +190,8 @@ class ConfigOptionMenu(QWidget):
 
         self.config = getAppConfig()
         sections: Dict[str, List[Option]] = {section: [] for section in self.config.getSections()}
-        
-        print(sections)
-        print("----")
+
         for opt in schema:
-            print(self.config.getSectionOfVar(opt.varName))
             sections[self.config.getSectionOfVar(opt.varName)].append(opt)
 
         # removing empty sections
@@ -202,7 +207,6 @@ class ConfigOptionMenu(QWidget):
             optLayout.setVerticalSpacing(0)
             mainLayout.addLayout(optLayout)
             for i, opt in enumerate(schema):
-                w = None
                 match opt.type:
                     case OptType.intType:
                         w = IntField(opt)
@@ -222,8 +226,9 @@ class ConfigOptionMenu(QWidget):
                 mainLayout.addWidget(Divider())
             
         mainLayout.addItem(QSpacerItem(0,0,QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding ))
-        self.setLayout(mainLayout)
-        
+        self.scrollHolder.setLayout(mainLayout)
+        self.parentLayout.addWidget(self.scrollHolder)
+        self.setLayout(self.parentLayout)
 if __name__ == '__main__':
     from appConfig import optionSchema
     a = QApplication(sys.argv)
