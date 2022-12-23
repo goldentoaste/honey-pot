@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import Any, Literal
+from typing import Any, Literal, List
 
 if __name__ == "__main__":
     print(os.path.abspath(f"{os.path.dirname(__file__)}\\.."))
@@ -9,13 +9,12 @@ from dataclasses import dataclass
 from enum import Enum
 
 from PySide6.QtCore import QRegularExpression
-from PySide6.QtGui import (QIntValidator, QRegularExpressionValidator,
-                           QValidator)
+from PySide6.QtGui import QIntValidator, QRegularExpressionValidator, QValidator
 
 from Configs.ConfigManager import ConfigManager
 
 schema = {
-    "Style.Scrollbar": {
+    "ScrollBar Style": {
         "sScrollbarColor": "#A89984",
         "iScrollbarClickedAlpha": 255,
         "iScrollbarEnterAlpha": 200,
@@ -23,12 +22,13 @@ schema = {
         "iScrollbarThickness": 18,
         "iScrollbarMinSize": 30,
     },
-    
-    "Testing":{
-        
-        "sTestingVar1":"asdsa"
-        },
-    "Hidden": {"sLastColor": "#000000"},  # just state keeping vars
+    "Testing": {"sTestingVar1": "asdsa"},
+    "Hidden": {# just state keeping vars
+        "sLastColor": "#000000",
+        "lsSavedStylePath": [],  # user made style json files, use abs path
+        "lsSavedStyleNames": [],  # name of each imported style
+        "sCurrentStyleName":""
+    },  
 }
 
 
@@ -48,7 +48,9 @@ class Option:
     desc: str
     type: OptType
     validator: QValidator
-    additional: Any = None # this field is used to storage additional data, like selectable vals for a selector field
+    additional: Any = (
+        None  # this field is used to storage additional data, like selectable vals for a selector field
+    )
 
 
 colorValidator = QRegularExpressionValidator(
@@ -113,18 +115,22 @@ class Config(ConfigManager):
     iScrollbarMinSize : int
     sTestingVar1 : str
     sLastColor : str
+    lsSavedStylePath : List[str]
+    lsSavedStyleNames : List[str]
+    sCurrentStyleName : str
 
 
 config: Config = None
 
 
-def getAppConfig():
+def getAppConfig() -> Config:
     global config
 
     if config is None:
         config = ConfigManager(None, os.path.join(os.path.dirname(__file__), "testConfig.ini"), schema, ",")
 
     return config
+
 
 
 if __name__ == "__main__":

@@ -1,18 +1,24 @@
+import os
+import sys
 from typing import Dict, List
-import sys, os
 
 if __name__ == "__main__":
     print(os.path.abspath(f"{os.path.dirname(__file__)}\\.."))
     sys.path.append(os.path.abspath(f"{os.path.dirname(__file__)}\\.."))
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QIntValidator
-from PySide6.QtWidgets import (QCheckBox, QColorDialog, QComboBox, QGridLayout,
-                               QHBoxLayout, QLabel, QLineEdit, QSizePolicy,
-                               QSlider, QToolButton, QVBoxLayout, QWidget, QApplication, QSpinBox, QSpacerItem, QScrollArea)
+import json
+
+from PySide6.QtCore import QPoint, Qt, Slot
+from PySide6.QtGui import QAction, QDesktopServices, QIntValidator
+from PySide6.QtWidgets import (QApplication, QCheckBox, QColorDialog,
+                               QComboBox, QFileDialog, QGridLayout,
+                               QHBoxLayout, QLabel, QLineEdit, QMenu,
+                               QScrollArea, QSizePolicy, QSlider, QSpacerItem,
+                               QSpinBox, QToolButton, QVBoxLayout, QWidget)
 
 from Configs.appConfig import Option, OptType, getAppConfig
 from GUI.divider import Divider
-import sys
+from utils import cacheLocation, getPath, styleLocation, copyCmd
+
 
 class OptionHolder(QWidget):
     def __init__(self, opt: Option, *args, **kwargs) -> None:
@@ -52,13 +58,14 @@ class StrField(OptionHolder):
         super().__init__(opt, *args, **kwargs)
 
         self.inputField = QLineEdit(self.config[self.opt])
-        self.hlayout.insertWidget(0,self.inputField)
+        self.hlayout.insertWidget(0, self.inputField)
 
     def save(self):
         self.config[self.opt.varName] = self.inputField.text()
 
     def resetValue(self):
         self.inputField.setText(self.config.resetToDefault(self.opt.varName))
+
 
 class BoolField(OptionHolder):
     def __init__(self, opt: Option, *args, **kwargs) -> None:
@@ -89,7 +96,7 @@ class ColorField(OptionHolder):
 
         self.hlayout.insertWidget(0, self.colorButton)
         self.hlayout.insertWidget(0, self.inputField)
-        
+
         self.setColor(self.inputField.text())
 
     def showColorPicker(self):
@@ -126,8 +133,7 @@ class IntField(OptionHolder):
 
         self.inputSlider = QSlider(Qt.Orientation.Horizontal)
         self.inputField = QSpinBox()
-        
-    
+
         val: QIntValidator = self.opt.validator
 
         self.inputSlider.setRange(val.bottom(), val.top())
@@ -137,13 +143,11 @@ class IntField(OptionHolder):
         self.inputSlider.setValue(self.config[self.opt.varName])
         self.inputField.setValue(self.config[self.opt.varName])
 
-        self.inputField.editingFinished.connect(lambda: (self.inputSlider.setValue(self.inputField.value())))
+        self.inputField.valueChanged.connect(self.inputSlider.setValue)
+        self.inputSlider.valueChanged.connect(lambda: (self.inputField.setValue(self.inputSlider.value())))
 
-        self.inputSlider.sliderMoved.connect(lambda: (self.inputField.setValue(self.inputSlider.value())))
-        
-        self.hlayout.insertWidget(0,self.inputField)
-        self.hlayout.insertWidget(0,self.inputSlider)
-        
+        self.hlayout.insertWidget(0, self.inputField)
+        self.hlayout.insertWidget(0, self.inputSlider)
 
     def resetValue(self):
         val = self.config.resetToDefault(self.opt.varName)
@@ -173,39 +177,151 @@ class SelectorField(OptionHolder):
         self.config.setValue(self.opt.varName, self.schema[self.combo.currentText()])
 
 
+defaultStyles = {"Default Style": getPath("GUI\\defaultStyle.json")}
+
+
 class ConfigOptionMenu(QWidget):
     def __init__(self, parent: QWidget = None, schema: List[Option] = None):
         super().__init__(parent)
-        
-        self.parentLayout = QHBoxLayout()
-        
+        self.styles = {}
+        self.parentLayout = QVBoxLayout()
+
+        self.config = getAppConfig()
+
+        self.setupPresets()
+        self.setupOptions(schema)
+
+    def setupPresets(self):
+        self.styles = {}
+        self.styles.update(defaultStyles)
+
+        self.styleLayout = QHBoxLayout()
+        self.styleDropdown = QComboBox()
+        self.styleOptionButton = QToolButton()
+        self.styleOptionButton.setText("...")
+        self.styleOptionButton.clicked.connect(lambda: self.showPresetContext(self.styleOptionButton.pos()))
+        self.styleLayout.addWidget(self.styleDropdown)
+        self.styleLayout.addWidget(self.styleOptionButton)
+
+        self.parentLayout.addLayout(self.styleLayout)
+
+        for name, path in zip(self.config.lsSavedStyleNames, self.config.lsSavedStylePath):
+            self.styles[name] = path
+
+        self.styleDropdown.addItems(list(self.styles.keys()))
+
+    @Slot(QPoint)
+    def showPresetContext(self, pos: QPoint):
+        menu = QMenu("Menu Title")
+        addNew = QAction("Add new style")
+        removeCur = QAction("Remove current style")
+        openFolder = QAction("Open containing folder")
+        openFolder.triggered.connect(self.openStyleDir)
+        addNew.triggered.connect(self.addStyle)
+        removeCur.triggered.connect(self.removeCurrent)
+        menu.addActions([addNew, removeCur, openFolder])
+        menu.exec(self.mapToGlobal(pos))
+
+    @Slot()
+    def removeCurrent(self):
+        if self.styleDropdown.currentText() in defaultStyles:
+            return
+        cur = self.styleDropdown.currentText()
+
+        self.styleDropdown.setCurrentText("")
+
+        os.remove(self.styles[cur])
+        self.styles.pop(cur)
+
+        names = self.config.lsSavedStyleNames
+        paths = self.config.lsSavedStylePath
+
+        index = names.index(cur)
+        names.pop(index)
+        paths.pop(index)
+
+        self.config.lsSavedStyleNames = names
+        self.config.lsSavedStylePath = paths
+
+    @Slot()
+    def addStyle(self):
+        fileName, _ = QFileDialog.getOpenFileName(self, "Select a .json style file", filter="Json (*.json)")
+
+        if not fileName:
+            return
+
+        with open(fileName, "r", encoding="utf-8") as f:
+            data: dict = json.load(f)
+
+            name = data["name"]
+
+            if name in self.styles:
+                return
+
+            content: dict = data["content"]
+
+            self.loadStyle(name, content)
+
+            names = self.config.lsSavedStyleNames
+            paths = self.config.lsSavedStylePath
+
+            names.append(name)
+            paths.append(fileName)
+
+            self.config.lsSavedStyleNames = names
+            self.config.lsSavedStylePath = paths
+
+            self.styles[name] = fileName
+            self.styleDropdown.addItem(name)
+            self.styleDropdown.setCurrentText(name)
+            print(name)
+            print(self.styles)
+
+            # save a copy
+            command = f"{copyCmd} \"{fileName}\" \"{styleLocation}\""
+            if sys.platform =='win32':
+                command = command.replace("/", "\\")
+            os.system(command)
+            
+
+    def loadStyle(self, name: str, content: dict = None):
+        pass
+
+    @Slot()
+    def openStyleDir(self):
+        if not os.path.isdir(styleLocation):
+            os.makedirs(styleLocation)
+        QDesktopServices.openUrl(styleLocation)
+
+    def setupOptions(self, schema):
+
         self.scrollArea = QScrollArea()
+        self.scrollArea.setWidgetResizable(True)
         self.scrollHolder = QWidget()
         self.scrollArea.setWidget(self.scrollHolder)
 
-        mainLayout = QVBoxLayout()
-        # mainLayout.setContentsMargins(0, 0, 0, 0)
+        self.mainLayout = QVBoxLayout()
+        self.scrollHolder.setLayout(self.mainLayout)
+        self.setLayout(self.parentLayout)
+        self.parentLayout.addWidget(self.scrollArea)
 
-        # divide to each section
-
-        self.config = getAppConfig()
         sections: Dict[str, List[Option]] = {section: [] for section in self.config.getSections()}
 
         for opt in schema:
             sections[self.config.getSectionOfVar(opt.varName)].append(opt)
 
         # removing empty sections
-        sections = {key : val for key,val in sections.items() if val}
+        sections = {key: val for key, val in sections.items() if val}
 
         self.optWidgets: List[OptionHolder] = []
 
         for index, section in enumerate(sections):
-            mainLayout.addWidget(QLabel(section))
+            self.mainLayout.addWidget(QLabel(section))
 
             optLayout = QGridLayout()
             optLayout.setContentsMargins(0, 0, 0, 0)
             optLayout.setVerticalSpacing(0)
-            mainLayout.addLayout(optLayout)
+            self.mainLayout.addLayout(optLayout)
             for i, opt in enumerate(schema):
                 match opt.type:
                     case OptType.intType:
@@ -222,17 +338,17 @@ class ConfigOptionMenu(QWidget):
                 optLayout.addWidget(label, i, 0)
                 optLayout.addWidget(w, i, 1)
 
-            if index < len(sections)-1:
-                mainLayout.addWidget(Divider())
-            
-        mainLayout.addItem(QSpacerItem(0,0,QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding ))
-        self.scrollHolder.setLayout(mainLayout)
-        self.parentLayout.addWidget(self.scrollHolder)
-        self.setLayout(self.parentLayout)
-if __name__ == '__main__':
+            if index < len(sections) - 1:
+                self.mainLayout.addWidget(Divider())
+
+        self.mainLayout.addItem(QSpacerItem(0, 0, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
+
+
+if __name__ == "__main__":
     from appConfig import optionSchema
+
     a = QApplication(sys.argv)
     w = ConfigOptionMenu(None, optionSchema)
-    
+
     w.show()
     a.exec()
