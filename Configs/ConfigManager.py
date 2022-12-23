@@ -195,7 +195,7 @@ class ConfigManager(QObject):
             return funcs[selector](section, option)
         listType = option[1]
         listCastings = {"s": lambda x: x, "i": int, "f": float, "b": self._isBool}
-        return [listCastings[listType](item) for item in self.config.get(section, option).split(self.listSep)]
+        return [listCastings[listType](item) for item in self.config.get(section, option).split(self.listSep) if item]
 
     def makeTypeHintClass(self, className: str):
 
