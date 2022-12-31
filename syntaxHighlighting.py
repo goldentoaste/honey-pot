@@ -30,7 +30,7 @@ class SyntaxColor:
     builtin = QColor("#7daea3")  # builtin or system class
     numeric = QColor("#d3869b")  # or used for specials, for example import statements
     comments = QColor("#928374")
-    # text = QColor("#d4be98") # generic text
+    text = QColor("#d4be98") # generic text
 
 
 class PreviewHighlighter(QSyntaxHighlighter):

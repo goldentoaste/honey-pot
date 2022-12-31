@@ -27,8 +27,13 @@ TODO STRICTLY TYPE LIST CONTENT LATER!!!
 
 class ConfigManager(QObject):
 
-    configChanged = Signal(QObject)
+    configChanged = Signal()
+    """
+    this signal is emitted when config's content has been changed at run time.\n
+    each obj is responsible themselves to sub and unsub from this signal.
+    """
     loaded = False
+    
 
     def __init__(self, parent: QObject, path: str, schema: Dict[str, Tuple[str, Any]], listSep="@@"):
 
@@ -60,47 +65,43 @@ class ConfigManager(QObject):
             for option in self.config.options(section):
                 self.vals[option] = self.loadVar(section, option)
                 self.secs[option] = section
-
-        self.shouldSave = True 
+        self.shouldSave = True
         self.loaded = True
-        
-       
-        
+
         self.save()
-        
+
     def getSectionOfVar(self, name):
         return self.secs[name]
-        
+
     def disableSave(self):
         self.shouldSave = False
-    
+
     def enableSave(self):
         self.shouldSave = True
-    
+
     def getSections(self):
         return [key for key in self.schema]
-    
-    def getOptions(self, sectionName:str):
+
+    def getOptions(self, sectionName: str):
         return [key for key in self.schema[sectionName]]
-    
-    def resetToDefault(self, optName:str) -> str:
-        '''
+
+    def resetToDefault(self, optName: str) -> str:
+        """
         returns the original value
-        '''
+        """
         val = self.schema[self.secs[optName]][optName]
-        self[optName] =  val
+        self[optName] = val
         return val
-        
-    
-    def getDefault(self, optName:str):
+
+    def getDefault(self, optName: str):
         return self.schema[self.secs[optName]][optName]
-    
+
     def getValue(self, name):
         return self[name]
-    
+
     def setValue(self, name, val):
         self[name] = val
-    
+
     def setMultipleVars(self, updates: Dict[str, Any]):
         """
         used to update multiple variables, without calling save for each var
@@ -140,15 +141,22 @@ class ConfigManager(QObject):
 
     def __setattr__(self, name: str, value: Any) -> None:
         if not self.loaded:
+           
             return super().__setattr__(name, value)
         try:
-            if self.vals[name] == value:
-                return
+            # FIXME: removing identical check for now, does not work with lists.
+            # should make a proxy list that updates config when content is changed.
+            # print("wtf wtf", self.vals[name], value, self.vals[name] == value)
+            # if self.vals[name] == value:
+            #     return
             self.checkVarType(name, value)
             self.vals[name] = value
             self.config.set(self.secs[name], name, self.getVarString(name, value))
+            
             self.save()
-        except KeyError as e:
+        except (KeyError, TypeError) as e:
+            if hasattr(self, name):
+                return super().__setattr__(name, value)
             raise AttributeError(f"Trying to set a config value that doesnt exist! {name}") from e
 
     def __getattribute__(self, name: str):
@@ -195,7 +203,11 @@ class ConfigManager(QObject):
             return funcs[selector](section, option)
         listType = option[1]
         listCastings = {"s": lambda x: x, "i": int, "f": float, "b": self._isBool}
-        return [listCastings[listType](item) for item in self.config.get(section, option).split(self.listSep) if item]
+        return [
+            listCastings[listType](item)
+            for item in self.config.get(section, option).split(self.listSep)
+            if item
+        ]
 
     def makeTypeHintClass(self, className: str):
 
@@ -221,9 +233,8 @@ if __name__ == "__main__":
 
     c = ConfigManager(
         None,
-        os.path.join(os.path.dirname(__file__), "testConfig.ini"),
+        os.path.join(os.path.dirname(__file__), "debug.ini"),
         {"main": {"iabc": 123, "bStuff": True, "liWee": [1, 2, 3]}, "Other": {"fFloat": 123.4}},
         listSep=",",
     )
-    print(c.iabc)
-    c.iabc = False
+    c.liWee = [4, 5, 6]

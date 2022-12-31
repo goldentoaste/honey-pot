@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QColorDialog,
 
 from Configs.appConfig import Option, OptType, getAppConfig
 from GUI.divider import Divider
-from utils import cacheLocation, getPath, styleLocation, copyCmd
+from utils import cacheLocation, copyCmd, getPath, styleLocation
 
 
 class OptionHolder(QWidget):
@@ -52,12 +52,18 @@ class OptionHolder(QWidget):
     def save(self):
         raise NotImplementedError()
 
+    def update(self):
+        """
+        update this widget's current display value according to the config.\n
+        should be used when the config has changed without the ui being changed by the user
+        """
+        raise NotImplementedError()
+
 
 class StrField(OptionHolder):
     def __init__(self, opt: Option, *args, **kwargs) -> None:
         super().__init__(opt, *args, **kwargs)
-
-        self.inputField = QLineEdit(self.config[self.opt])
+        self.inputField = QLineEdit(self.config[self.opt.varName])
         self.hlayout.insertWidget(0, self.inputField)
 
     def save(self):
@@ -66,11 +72,13 @@ class StrField(OptionHolder):
     def resetValue(self):
         self.inputField.setText(self.config.resetToDefault(self.opt.varName))
 
+    def update(self):
+        self.inputField.setText(self.config[self.opt.varName])
+
 
 class BoolField(OptionHolder):
     def __init__(self, opt: Option, *args, **kwargs) -> None:
         super().__init__(opt, *args, **kwargs)
-
         self.checkBox = QCheckBox()
         self.checkBox.setChecked(self.config[self.opt.varName])  # pray the type matches
         self.hlayout.insertWidget(0, self.checkBox)
@@ -80,6 +88,9 @@ class BoolField(OptionHolder):
 
     def save(self):
         self.config.setValue(self.opt.varName, self.checkBox.checkState() != Qt.CheckState.Unchecked)
+
+    def update(self):
+        self.checkBox.setChecked(self.config[self.opt.varName])
 
 
 class ColorField(OptionHolder):
@@ -126,6 +137,17 @@ class ColorField(OptionHolder):
     def resetValue(self):
         self.setColor(self.config.resetToDefault(self.opt.varName))
 
+    def update(self):
+        print("update color", self.opt.varName, self.config[self.opt.varName])
+        self.inputField.setText(self.config[self.opt.varName])
+        self.colorButton.setStyleSheet(
+            f"""
+            QToolButton {{
+                background-color: {self.inputField.text()}
+            }}
+            """
+        )
+
 
 class IntField(OptionHolder):
     def __init__(self, opt: Option, *args, **kwargs) -> None:
@@ -157,6 +179,9 @@ class IntField(OptionHolder):
     def save(self):
         self.config.setValue(self.opt.varName, int(self.inputField.text()))
 
+    def update(self):
+        self.inputField.setValue(self.config[self.opt.varName])
+
 
 class SelectorField(OptionHolder):
     def __init__(self, opt: Option, *args, **kwargs) -> None:
@@ -176,6 +201,9 @@ class SelectorField(OptionHolder):
     def save(self):
         self.config.setValue(self.opt.varName, self.schema[self.combo.currentText()])
 
+    def update(self):
+        self.combo.setCurrentText(self.reverse[self.config[self.opt.varName]])
+
 
 defaultStyles = {"Default Style": getPath("GUI\\defaultStyle.json")}
 
@@ -191,12 +219,22 @@ class ConfigOptionMenu(QWidget):
         self.setupPresets()
         self.setupOptions(schema)
 
+    def closeEvent(self, _) -> None:
+        # apply the changes when window is closed (when a preset is chosen, an update is triggered immediately)
+        self.config.enableSave()
+        self.config.save()
+        self.config.configChanged.emit()
+
+        for widget in self.optWidgets:
+            widget.save()
+
     def setupPresets(self):
-        self.styles = {}
+        self.styles: dict = {}
         self.styles.update(defaultStyles)
 
         self.styleLayout = QHBoxLayout()
         self.styleDropdown = QComboBox()
+        self.styleDropdown.activated.connect(self.styleSelected)
         self.styleOptionButton = QToolButton()
         self.styleOptionButton.setText("...")
         self.styleOptionButton.clicked.connect(lambda: self.showPresetContext(self.styleOptionButton.pos()))
@@ -209,6 +247,21 @@ class ConfigOptionMenu(QWidget):
             self.styles[name] = path
 
         self.styleDropdown.addItems(list(self.styles.keys()))
+        if self.config.sCurrentStyleName:
+            self.styleDropdown.setCurrentText(self.config.sCurrentStyleName)
+
+    @Slot()
+    def styleSelected(self, _):
+        print("selected")
+        name = self.styleDropdown.currentText()
+        self.config.sCurrentStyleName = name
+        path = self.styles[name]
+
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            print(name, path, data)
+            content = data["content"]
+            self.loadStyle(name, content)
 
     @Slot(QPoint)
     def showPresetContext(self, pos: QPoint):
@@ -271,21 +324,30 @@ class ConfigOptionMenu(QWidget):
             self.config.lsSavedStyleNames = names
             self.config.lsSavedStylePath = paths
 
+            self.config.save()
+
             self.styles[name] = fileName
             self.styleDropdown.addItem(name)
             self.styleDropdown.setCurrentText(name)
-            print(name)
-            print(self.styles)
 
             # save a copy
-            command = f"{copyCmd} \"{fileName}\" \"{styleLocation}\""
-            if sys.platform =='win32':
+            command = f'{copyCmd} "{fileName}" "{styleLocation}"'
+            if sys.platform == "win32":
                 command = command.replace("/", "\\")
             os.system(command)
-            
 
     def loadStyle(self, name: str, content: dict = None):
-        pass
+        print("before", self.config.sScrollbarColor)
+        self.config.setMultipleVars(content)
+        print("after", self.config.sScrollbarColor)
+
+        for widget in self.optWidgets:
+            widget.update()
+            print(widget)
+        self.config.save()
+        self.config.configChanged.emit()
+
+        self.config.sCurrentStyleName = name
 
     @Slot()
     def openStyleDir(self):
@@ -294,7 +356,6 @@ class ConfigOptionMenu(QWidget):
         QDesktopServices.openUrl(styleLocation)
 
     def setupOptions(self, schema):
-
         self.scrollArea = QScrollArea()
         self.scrollArea.setWidgetResizable(True)
         self.scrollHolder = QWidget()
@@ -337,6 +398,7 @@ class ConfigOptionMenu(QWidget):
 
                 optLayout.addWidget(label, i, 0)
                 optLayout.addWidget(w, i, 1)
+                self.optWidgets.append(w)
 
             if index < len(sections) - 1:
                 self.mainLayout.addWidget(Divider())

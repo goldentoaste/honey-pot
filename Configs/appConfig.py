@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import Any, Literal, List
+from typing import Any, List
 
 if __name__ == "__main__":
     print(os.path.abspath(f"{os.path.dirname(__file__)}\\.."))
@@ -21,6 +21,28 @@ schema = {
         "bScrollbarUseFade": True,
         "iScrollbarThickness": 18,
         "iScrollbarMinSize": 30,
+    },
+    "Markdown Styles":{
+    'iEditorFontSize': 10,
+    'iPreviewFontSize' :10,
+    'sEditorBackground': '#dddddd',
+    'sPreviewBackground': '#dddddd',
+      'sKeyWordColor': '#ea6862',
+      'sSymbolColor': '#e78a4e',
+      'sStringColor':'#d8a657',
+      'sFunctionColor':'#a9b665',
+      'sBuiltinColor':'#7daea3',
+      'sNumericColor': '#d3869b',
+      'sCommentColor': '#928374',
+      'sTextColor':'#d4be98',
+      'sMarkdownColor':''
+      'sBackGroundColor': '#292828',
+      'sCodeFont': 'Cascadia Code',
+      'sTextFont':'Calilbri',
+      'sIndent1': '#64D8A657', #qt wants argb
+      'sIndent2': '#64A9B665',
+      'sIndent3': '#64D3869B',
+      'sIndent4': '#647DAEA3',
     },
     "Testing": {"sTestingVar1": "asdsa"},
     "Hidden": {# just state keeping vars
@@ -113,6 +135,25 @@ class Config(ConfigManager):
     bScrollbarUseFade : bool
     iScrollbarThickness : int
     iScrollbarMinSize : int
+    iEditorFontSize : int
+    iPreviewFontSize : int
+    sEditorBackground : str
+    sPreviewBackground : str
+    sKeyWordColor : str
+    sSymbolColor : str
+    sStringColor : str
+    sFunctionColor : str
+    sBuiltinColor : str
+    sNumericColor : str
+    sCommentColor : str
+    sTextColor : str
+    sBackGroundColor : str
+    sCodeFont : str
+    sTextFont : str
+    sIndent1 : str
+    sIndent2 : str
+    sIndent3 : str
+    sIndent4 : str
     sTestingVar1 : str
     sLastColor : str
     lsSavedStylePath : List[str]

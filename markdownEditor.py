@@ -249,7 +249,6 @@ class MarkdownEditor(QPlainTextEdit):
             
             
     def insertAtBeginning(self, char="#", n=1):
-        
         cursor = self.textCursor()
         cursor.beginEditBlock()
         pos = cursor.position()
