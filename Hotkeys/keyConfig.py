@@ -4,7 +4,7 @@ import sys
 if __name__ == "__main__":
     print(os.path.abspath(f"{os.path.dirname(__file__)}\\.."))
     sys.path.append(os.path.abspath(f"{os.path.dirname(__file__)}\\.."))
-from Hotkeys.hotkeyManager import HotkeyManager, _BaseHotkeyManager
+from Hotkeys.HotkeyManager import HotkeyManager, _BaseHotkeyManager
 
 config: HotkeyManager = None
 

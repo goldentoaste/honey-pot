@@ -35,7 +35,7 @@ schema = {
       'sNumericColor': '#d3869b',
       'sCommentColor': '#928374',
       'sTextColor':'#d4be98',
-      'sMarkdownColor':''
+      'sMarkdownColor':'',
       'sBackGroundColor': '#292828',
       'sCodeFont': 'Cascadia Code',
       'sTextFont':'Calilbri',

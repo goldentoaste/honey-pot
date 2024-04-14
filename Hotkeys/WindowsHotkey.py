@@ -6,7 +6,7 @@ from PySide6.QtCore import (QCoreApplication, QKeyCombination, QObject, Qt,
                             QThread, Signal, Slot)
 from PySide6.QtGui import QKeyEvent, QKeySequence
 
-from Hotkeys.baseHotKeyFManager import _BaseHotkeyManager
+from Hotkeys.BaseHotKeyFManager import _BaseHotkeyManager
 
 user32 = windll.user32
 

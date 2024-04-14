@@ -1,5 +1,17 @@
 # stickyMarkdown
- 🍯
+
+ ![notes](docs/note.png)
+This project was meant to be a sticky notes app that is similar to Windows's built in notes app, except it takes markdown input. 
+
+## Features
+* ...
+
+## Discontinuation 
+I spent quite some time into this project but eventually decided it is not worth the time, for the following reasons:
+1. Qt's bad support for markdown rendering. Currently Qt supports markdown with it's `TextEdit.setMarkdown` 
+
+## Running the code
+
 
 
 ## Known issues/draw backs:
