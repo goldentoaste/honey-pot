@@ -13,7 +13,7 @@ else:
 
 
 # FIXME dev location 
-cacheLocation = r"D:/PythonProject/stickyMarkdown/testCache"
+cacheLocation = f"{os.getcwd()}/testCache"
 styleLocation = f"{cacheLocation}/styles"
 mdImageRegex = re.compile(r"\!\[[^\[\]]+\]\(([^\(\)]+)\)")  # finds all the image links
 
