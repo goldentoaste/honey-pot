@@ -17,7 +17,7 @@ This project was meant to be a sticky notes app that is similar to Windows's bui
 ## Discontinuation 
 I spent quite some time into this project but eventually decided it is not worth the time, for the following reasons:
 1. Qt's bad support for markdown rendering. Currently Qt supports markdown with it's `TextEdit.setMarkdown`, however it only supports replacing the entire document at once, and also renders the markdown via rich text, so that results are rather ugly and doesn't support some markdown features.
-    * Another option was to use Qt's website to render markdown, but the website takes too much memory (~100mbs) to just render a simple markdown doc, when most of the webview's feature would not be used.
+    * Another option was to use Qt's webview to render markdown, but the webview takes too much memory (~100mbs) to just render a simple markdown doc, when most of the webview's feature would not be used.
 2. Bad performance. 
     * Since Qt replaces the entire markdown document in order to update, this takes time to take effect.
     * Qt's support for markdown is not very compliant, so I implemented some preprocessing of the markdown text before sending them to Qt. This preprocessing is not very fast because python, and that its just a lot of string processing. 
